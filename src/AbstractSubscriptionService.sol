@@ -5,7 +5,49 @@ pragma solidity >=0.8.0;
 import './ISubscriptionService.sol';
 import './IReactive.sol';
 
-contract SubscriptionService is ISubscriptionService {
+abstract contract AbstractSubscriptionService is ISubscriptionService {
+    event Subscribe (
+        address indexed subscriber,
+        uint256 indexed chain_id,
+        address indexed _contract,
+        uint256 topic_0,
+        uint256 topic_1,
+        uint256 topic_2,
+        uint256 topic_3
+    );
+
+    event Unsubscribe (
+        address indexed subscriber,
+        uint256 indexed chain_id,
+        address indexed _contract,
+        uint256 topic_0,
+        uint256 topic_1,
+        uint256 topic_2,
+        uint256 topic_3
+    );
+
+    event DeployerSubscribe (
+        address indexed subscriber,
+        uint256 indexed chain_id,
+        address indexed _contract,
+        uint256 topic_0,
+        uint256 topic_1,
+        uint256 topic_2,
+        uint256 topic_3,
+        address deployer
+    );
+
+    event DeployerUnsubscribe (
+        address indexed subscriber,
+        uint256 indexed chain_id,
+        address indexed _contract,
+        uint256 topic_0,
+        uint256 topic_1,
+        uint256 topic_2,
+        uint256 topic_3,
+        address deployer
+    );
+
     struct Filter {
         // `true` in case this record has been touched by `subscribe()`.
         bool initialized;
@@ -16,13 +58,18 @@ contract SubscriptionService is ISubscriptionService {
     }
 
     // Arbitrarily chosen value set aside for indicating a wildcard match on a given topic.
-    uint256 private constant REACTIVE_IGNORE = 0xa65f96fc951c35ead38878e0f0b7a3c744a6f5ccc1476b313353ce31712313ad;
+    uint256 public constant REACTIVE_IGNORE = 0xa65f96fc951c35ead38878e0f0b7a3c744a6f5ccc1476b313353ce31712313ad;
 
     // Number of filtering criteria supported.
     uint8 private constant NUM_OF_CRITERIA = 6;
 
     // Recursive data structure for keeping track of subscribers.
     mapping(uint256 => Filter) public subscriptions;
+
+    // @notice This method can be used to determine whether the contract is in the RN or RVM context.
+    function ping() external pure returns (bool) {
+        return true;
+    }
 
     // @notice Subscribes the calling contract to receive events matching the criteria specified.
     // @param chain_id EIP155 source chain ID for the event (as a `uint256`), or `0` for all chains.
@@ -42,13 +89,13 @@ contract SubscriptionService is ISubscriptionService {
         uint256 topic_3
     ) external {
         uint256[NUM_OF_CRITERIA] memory criteria = [
-            chain_id == 0 ? REACTIVE_IGNORE : chain_id,
-            uint256(uint160(_contract)) == 0 ? REACTIVE_IGNORE : uint256(uint160(_contract)),
-            topic_0,
-            topic_1,
-            topic_2,
-            topic_3
-        ];
+                        chain_id == 0 ? REACTIVE_IGNORE : chain_id,
+                                uint256(uint160(_contract)) == 0 ? REACTIVE_IGNORE : uint256(uint160(_contract)),
+                    topic_0,
+                    topic_1,
+                    topic_2,
+                    topic_3
+            ];
         int8 last_non_zero = computeLastNonZeroCriterion(criteria);
         mapping(uint256 => Filter) storage map = subscriptions;
         for (uint256 index = 0; index <= uint8(last_non_zero); ++index) {
@@ -56,6 +103,7 @@ contract SubscriptionService is ISubscriptionService {
             filter.initialized = true;
             if (index == uint8(last_non_zero)) {
                 filter.subscribers.push(msg.sender);
+                emit Subscribe(msg.sender, chain_id, _contract, topic_0, topic_1, topic_2, topic_3);
             } else {
                 map = filter.conditional_subscribers;
             }
@@ -79,13 +127,13 @@ contract SubscriptionService is ISubscriptionService {
         uint256 topic_3
     ) external {
         uint256[NUM_OF_CRITERIA] memory criteria = [
-            chain_id == 0 ? REACTIVE_IGNORE : chain_id,
-            uint256(uint160(_contract)) == 0 ? REACTIVE_IGNORE : uint256(uint160(_contract)),
-            topic_0,
-            topic_1,
-            topic_2,
-            topic_3
-        ];
+                        chain_id == 0 ? REACTIVE_IGNORE : chain_id,
+                                uint256(uint160(_contract)) == 0 ? REACTIVE_IGNORE : uint256(uint160(_contract)),
+                    topic_0,
+                    topic_1,
+                    topic_2,
+                    topic_3
+            ];
         int8 last_non_zero = computeLastNonZeroCriterion(criteria);
         mapping(uint256 => Filter) storage map = subscriptions;
         for (uint256 index = 0; index <= uint8(last_non_zero); ++index) {
@@ -99,6 +147,8 @@ contract SubscriptionService is ISubscriptionService {
                 for (uint256 subscriber_index = 0; subscriber_index != filter.subscribers.length; ++subscriber_index) {
                     if (filter.subscribers[subscriber_index] != msg.sender) {
                         updated_subscribers[updated_length++] = filter.subscribers[subscriber_index];
+                    } else {
+                        emit Unsubscribe(msg.sender, chain_id, _contract, topic_0, topic_1, topic_2, topic_3);
                     }
                 }
                 while (filter.subscribers.length > 0) {
@@ -132,13 +182,13 @@ contract SubscriptionService is ISubscriptionService {
         address[] memory subscribers
     ) {
         uint256[NUM_OF_CRITERIA] memory criteria = [
-            chain_id,
-            uint256(uint160(_contract)),
-            topic_0,
-            topic_1,
-            topic_2,
-            topic_3
-        ];
+                    chain_id,
+                            uint256(uint160(_contract)),
+                    topic_0,
+                    topic_1,
+                    topic_2,
+                    topic_3
+            ];
         results = findSubscribersRecursively(
             subscriptions,
             criteria,
@@ -181,9 +231,12 @@ contract SubscriptionService is ISubscriptionService {
             Filter storage filter = filter_map[cur_crit];
             if (filter.initialized) {
                 for (uint256 ix = 0; ix != filter.subscribers.length; ++ix) {
-                    ++subscribers;
-                    if (populate) {
-                        found_subscribers[next_index++] = filter.subscribers[ix];
+                    address subscriber = filter.subscribers[ix];
+                    if (this.debt(subscriber) == 0) {
+                        ++subscribers;
+                        if (populate) {
+                            found_subscribers[next_index++] = subscriber;
+                        }
                     }
                 }
                 if (criterion_index < (NUM_OF_CRITERIA - 1)) {
@@ -218,5 +271,67 @@ contract SubscriptionService is ISubscriptionService {
             }
         }
         require(last_non_zero >= 0, 'NZ');
+    }
+
+    // @notice Subscribes the specified contract to receive events matching the criteria specified.
+    // @param reactive Reactive contract address deployed by msg.sender
+    // @param chain_id EIP155 source chain ID for the event (as a `uint256`), or `0` for all chains.
+    // @param _contract Contract address to monitor, or `0` for all contracts.
+    // @param topic_0 Topic 0 to monitor, or `REACTIVE_IGNORE` for all topics.
+    // @param topic_1 Topic 1 to monitor, or `REACTIVE_IGNORE` for all topics.
+    // @param topic_2 Topic 2 to monitor, or `REACTIVE_IGNORE` for all topics.
+    // @param topic_3 Topic 3 to monitor, or `REACTIVE_IGNORE` for all topics.
+    // @dev At least one of criteria above must be non-`REACTIVE_IGNORE`.
+    // @dev Will allow duplicate or overlapping subscriptions, clients must ensure idempotency.
+    function subscribeContract(
+        address reactive,
+        uint256 chain_id,
+        address _contract,
+        uint256 topic_0,
+        uint256 topic_1,
+        uint256 topic_2,
+        uint256 topic_3
+    ) external {
+        emit DeployerSubscribe(
+            reactive,
+            chain_id,
+            _contract,
+            topic_0,
+            topic_1,
+            topic_2,
+            topic_3,
+            msg.sender
+        );
+    }
+
+    // @notice Unsubscribes the specified contract from the given event filter.
+    // @param reactive Reactive contract address deployed by msg.sender
+    // @param chain_id EIP155 source chain ID for the event (as a `uint256`), or `0` for all chains.
+    // @param _contract Contract address to monitor, or `0` for all contracts.
+    // @param topic_0 Topic 0 to monitor, or `REACTIVE_IGNORE` for all topics.
+    // @param topic_1 Topic 1 to monitor, or `REACTIVE_IGNORE` for all topics.
+    // @param topic_2 Topic 2 to monitor, or `REACTIVE_IGNORE` for all topics.
+    // @param topic_3 Topic 3 to monitor, or `REACTIVE_IGNORE` for all topics.
+    // @dev At least one of criteria above must be non-`REACTIVE_IGNORE`.
+    // @dev Will allow duplicate or overlapping subscriptions, clients must ensure idempotency.
+    function unsubscribeContract(
+        address reactive,
+        uint256 chain_id,
+        address _contract,
+        uint256 topic_0,
+        uint256 topic_1,
+        uint256 topic_2,
+        uint256 topic_3
+    ) external {
+        emit DeployerUnsubscribe(
+            reactive,
+            chain_id,
+            _contract,
+            topic_0,
+            topic_1,
+            topic_2,
+            topic_3,
+            msg.sender
+        );
     }
 }
