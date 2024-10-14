@@ -24,4 +24,3 @@ contract BasicDemoL1Callback is AbstractCallback {
         );
     }
 }
-
