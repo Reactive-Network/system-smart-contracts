@@ -32,7 +32,7 @@ To run the test suite:
 forge test -vv
 ```
 
-...or, to inspect the call tree:
+To inspect the call tree:
 
 ```
 forge test -vvvv
@@ -40,38 +40,32 @@ forge test -vvvv
 
 ### Additional Documentation & Demos
 
-Refer to `TECH.md` for additional information on implementing reactive contracts and callbacks.
+Refer to [Docs](https://dev.reactive.network/system-contract) for additional information on implementing reactive contracts and callbacks. The `src/demos` directory contains the basic [Reactive Network demo](https://github.com/Reactive-Network/system-smart-contracts/tree/main/src/demos/basic) with its `README.md` file.
 
-The `src/demos` directory contains several elaborate demos, accompanied by `README.md` files for each one.
-
-### Environment variable configuration for running demos
+### Environment Variable Configuration
 
 The following environment variables are used in the instructions for running the demos, and should be configured beforehand.
 
 #### `SEPOLIA_RPC`
 
-The Sepolia Testnet RPC address; `https://rpc2.sepolia.org` unless you want to use your own.
+Ethereum Sepolia RPC address — `https://rpc2.sepolia.org`.
 
 #### `SEPOLIA_PRIVATE_KEY`
 
-The private key to your Sepolia wallet.
+Ethereum Sepolia private key.
 
 #### `REACTIVE_RPC`
 
-For the Reactive Testnet RPC address, refer to the [docs](https://dev.reactive.network/kopli-testnet#kopli-testnet-information).
+Kopli Testnet RPC address — `https://kopli-rpc.rkt.ink`.
 
 #### `REACTIVE_PRIVATE_KEY`
 
-The private key to your Reactive wallet.
-
-#### `DEPLOYER_ADDR`
-
-The address of your Reactive wallet.
+Kopli Testnet private key.
 
 #### `SYSTEM_CONTRACT_ADDR`
 
-For the system contract address on the Reactive testnet, refer to the [docs](https://dev.reactive.network/kopli-testnet#kopli-testnet-information).
+The system contract address on [Kopli Testnet](https://dev.reactive.network/kopli-testnet#kopli-testnet-information)
 
 #### `CALLBACK_PROXY_ADDR`
 
-For the callback sender address, refer to the [docs](https://dev.reactive.network/kopli-testnet#kopli-testnet-information).
+For callback proxy addresses, refer to the [docs](https://dev.reactive.network/origins-and-destinations#chains).
