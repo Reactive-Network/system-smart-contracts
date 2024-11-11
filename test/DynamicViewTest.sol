@@ -3,7 +3,7 @@
 pragma solidity >=0.8.0;
 
 import 'forge-std/Test.sol';
-import '../src/SubscriptionService.sol';
+import '../src/SystemContract.sol';
 import '../src/demos/basic/BasicDemoReactiveContract.sol';
 
 contract DynamicViewTest is Test {
@@ -11,11 +11,11 @@ contract DynamicViewTest is Test {
 
     uint256 private constant SEPOLIA_CHAIN_ID = 11155111;
 
-    SubscriptionService service;
+    SystemContract service;
     BasicDemoReactiveContract stub;
 
     function setUp() public {
-        service = new SubscriptionService();
+        service = new SystemContract();
         stub = new BasicDemoReactiveContract(address(service), address(service), 0xdeadbeef, address(service));
     }
 

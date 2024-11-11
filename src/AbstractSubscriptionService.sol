@@ -2,8 +2,8 @@
 
 pragma solidity >=0.8.0;
 
-import './ISubscriptionService.sol';
-import './IReactive.sol';
+import '../lib/reactive-lib/src/interfaces/ISubscriptionService.sol';
+import '../lib/reactive-lib/src/interfaces/IReactive.sol';
 
 abstract contract AbstractSubscriptionService is ISubscriptionService {
     event Subscribe (

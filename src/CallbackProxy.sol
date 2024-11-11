@@ -2,8 +2,8 @@
 
 pragma solidity >=0.8.0;
 
-import './IPayable.sol';
-import './IPayer.sol';
+import '../lib/reactive-lib/src/interfaces/IPayable.sol';
+import '../lib/reactive-lib/src/interfaces/IPayer.sol';
 
 contract CallbackProxy is IPayable {
     event BlacklistContract (
@@ -142,7 +142,7 @@ contract CallbackProxy is IPayable {
                 debts[_contract] = amount;
                 _blacklist(_contract);
                 // TODO: use a low level call to prevent reverts when accidentally calling back to an EOA
-                try IPayer(_contract).pay{gas: max_charge_gas}(debts[_contract]) {
+                try IPayer(payable(_contract)).pay{gas: max_charge_gas}(debts[_contract]) {
                 } catch Error (string memory /* reason */) {
                 }
             }
