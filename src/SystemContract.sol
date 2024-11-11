@@ -2,8 +2,8 @@
 
 pragma solidity >=0.8.0;
 
-import './IReactive.sol';
-import './ISystemContract.sol';
+import '../lib/reactive-lib/src/interfaces/IReactive.sol';
+import '../lib/reactive-lib/src/interfaces/ISystemContract.sol';
 import './AbstractSubscriptionService.sol';
 import './CallbackProxy.sol';
 

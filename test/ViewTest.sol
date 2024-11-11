@@ -3,7 +3,7 @@
 pragma solidity >=0.8.0;
 
 import 'forge-std/Test.sol';
-import '../src/SubscriptionService.sol';
+import '../src/SystemContract.sol';
 import '../src/demos/basic/BasicDemoReactiveContract.sol';
 
 contract ViewTest is Test {
@@ -13,11 +13,11 @@ contract ViewTest is Test {
 
     uint256 private constant STUB_CONTRACTS = 3;
 
-    SubscriptionService service;
+    SystemContract service;
     BasicDemoReactiveContract[STUB_CONTRACTS] stub;
 
     function setUp() public {
-        service = new SubscriptionService();
+        service = new SystemContract();
         stub[0] = new BasicDemoReactiveContract(address(service), address(service), 0xdeadbeef, address(service));
         stub[1] = new BasicDemoReactiveContract(address(service), address(0x0), 0xdeadbeef, address(service));
         stub[2] = new BasicDemoReactiveContract(address(service), address(service), REACTIVE_IGNORE, address(service));
