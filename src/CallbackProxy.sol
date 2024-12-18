@@ -14,6 +14,12 @@ contract CallbackProxy is IPayable {
         address indexed reactive
     );
 
+    event CallbackFailure(address indexed target, bytes payload);
+
+    event Unkickbackable();
+
+    event PaymentFailure(address indexed _contract, uint256 indexed amount);
+
     address payable internal owner;
 
     mapping(address => bool) internal callback_senders;
@@ -21,16 +27,18 @@ contract CallbackProxy is IPayable {
     mapping(address => uint256) public reserves;
     mapping(address => uint256) public debts;
 
-    uint256 gas_price_coefficient;
+    uint256 gas_price_coefficient_promille;
+    uint256 kickback_coefficient_promille;
     uint256 extra_gas_fee;
     uint256 init_bonus;
     uint256 max_charge_gas;
 
     constructor(
-        uint256 _gas_price_coefficient, // Suggested: 2
-        uint256 _extra_gas_fee, // Suggested: 100000
+        uint256 _gas_price_coefficient_promille, // Suggested: 1250
+        uint256 _kickback_coefficient_promille, // Suggested: 900
+        uint256 _extra_gas_fee, // Suggested: 50000
         uint256 _init_bonus, // Suggested: 0.2 ether
-        uint256 _max_charge_gas, // Suggested: 100000
+        uint256 _max_charge_gas, // Suggested: 30000
         address[] memory _callback_senders
     ) {
         owner = payable(msg.sender);
@@ -39,7 +47,8 @@ contract CallbackProxy is IPayable {
         for (uint256 ix = 0; ix != _callback_senders.length; ++ix) {
             callback_senders[_callback_senders[ix]] = true;
         }
-        gas_price_coefficient = _gas_price_coefficient;
+        gas_price_coefficient_promille = _gas_price_coefficient_promille;
+        kickback_coefficient_promille = _kickback_coefficient_promille;
         extra_gas_fee = _extra_gas_fee;
         init_bonus = _init_bonus;
         max_charge_gas = _max_charge_gas;
@@ -99,13 +108,21 @@ contract CallbackProxy is IPayable {
     }
 
     function _callback(address _contract, bytes calldata payload) internal {
-        // TODO: limit the gas for callback itself.
         require(debts[_contract] == 0, 'Callback target currently in debt');
         uint256 gas_init = gasleft();
-        (bool result,) = _contract.call(payload);
+        (bool result,) = _contract.call{ gas: gasleft() - extra_gas_fee - max_charge_gas }(payload);
+        if (!result) {
+            emit CallbackFailure(_contract, payload);
+        }
         uint256 price = tx.gasprice > block.basefee ? tx.gasprice : block.basefee;
-        uint256 adjusted_gas_price = ((1 + price) * (gas_price_coefficient + (result ? 0 : 1))) * (extra_gas_fee + gas_init - gasleft());
+        uint256 adjusted_gas_price = ((price * gas_price_coefficient_promille) / 1000) * (extra_gas_fee + gas_init - gasleft());
         _charge(_contract, adjusted_gas_price);
+        uint256 kickback = (adjusted_gas_price * kickback_coefficient_promille) / 1000;
+        result = false;
+        if (kickback <= address(this).balance) {
+            (result,) = tx.origin.call{ value: kickback }(new bytes(0));
+        }
+        emit Unkickbackable();
     }
 
     function _deposit(address _contract, uint256 amount) internal {
@@ -126,7 +143,6 @@ contract CallbackProxy is IPayable {
         }
     }
 
-    // TODO: return some of the fees collected to the callback sender?
     function _charge(address _contract, uint256 amount) internal {
         _init(_contract);
         if (amount > 0) {
@@ -142,8 +158,10 @@ contract CallbackProxy is IPayable {
                 debts[_contract] = amount;
                 _blacklist(_contract);
                 // TODO: use a low level call to prevent reverts when accidentally calling back to an EOA
-                try IPayer(payable(_contract)).pay{gas: max_charge_gas}(debts[_contract]) {
-                } catch Error (string memory /* reason */) {
+                bytes memory payload = abi.encodeWithSignature("pay(uint256)", debts[_contract]);
+                (bool success,) = _contract.call{ gas: max_charge_gas }(payload);
+                if (!success) {
+                    emit PaymentFailure(_contract, debts[_contract]);
                 }
             }
         }
