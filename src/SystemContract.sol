@@ -21,6 +21,7 @@ contract SystemContract is AbstractSubscriptionService, CallbackProxy, ISystemCo
 
     address public constant SYSTEM_CONTRACT_ADDR = 0x0000000000000000000000000000000000fffFfF;
     address public constant TESTNET_ADMIN_ADDR = 0xFe5A45dB052489cbc16d882404bcFa4f6223A55E;
+    address public constant VALIDATOR_ROOT_ADDR_1 = 0x123463a4B065722E99115D6c222f267d9cABb524; // TODO: fixme!
 
     uint256 private constant GAS_PRICE_COEFFICIENT_PROMILLE = 1250;
     uint256 private constant KICKBACK_COEFFICIENT_PROMILLE = 900;
@@ -29,6 +30,37 @@ contract SystemContract is AbstractSubscriptionService, CallbackProxy, ISystemCo
     uint256 private constant MAX_CHARGE_GAS = 100000;
 
     bool private initialized;
+
+    struct CallbackInfo {
+        uint256 block_number;
+        address rvm_id;
+        uint256 rvm_txhash;
+        uint256 callback_ix;
+        uint256 dest_chain_id;
+        uint256 dest_txhash;
+        bytes err;
+    }
+
+    struct CallbackStore {
+        uint256 block_number;
+        address rvm_id;
+        uint256 callback_ix;
+        uint256 dest_chain_id;
+        uint256 dest_txhash;
+        bytes err;
+    }
+
+    event CallbackPosted(
+        uint256 indexed block_number,
+        address indexed rvm_id,
+        uint256 indexed rvm_txhash,
+        uint256 callback_ix,
+        uint256 dest_chain_id,
+        uint256 dest_txhash,
+        bytes err
+    );
+
+    mapping(uint256 => CallbackStore[]) public callbacks;
 
     constructor() CallbackProxy(
         GAS_PRICE_COEFFICIENT_PROMILLE,
@@ -45,16 +77,15 @@ contract SystemContract is AbstractSubscriptionService, CallbackProxy, ISystemCo
         _;
     }
 
+    modifier conditionalInit() {
+        if (!initialized) {
+            _init();
+        }
+        _;
+    }
+
     function init() external {
-        require(!initialized, 'Already initialized');
-        initialized = true;
-        gas_price_coefficient_promille = GAS_PRICE_COEFFICIENT_PROMILLE;
-        kickback_coefficient_promille = KICKBACK_COEFFICIENT_PROMILLE;
-        extra_gas_fee = EXTRA_GAS_FEE;
-        init_bonus = INIT_BONUS;
-        max_charge_gas = MAX_CHARGE_GAS;
-        owner = payable(TESTNET_ADMIN_ADDR);
-        callback_senders[TESTNET_ADMIN_ADDR] = true;
+        _init();
     }
 
     // @notice To be called by reactive node only to charge the reactive contracts for services.
@@ -73,6 +104,32 @@ contract SystemContract is AbstractSubscriptionService, CallbackProxy, ISystemCo
         }
     }
 
+    function storeCallbacks(CallbackInfo[] calldata _callbacks) external callbackOnly {
+        for (uint256 ix = 0; ix != _callbacks.length; ++ix) {
+            emit CallbackPosted(
+                _callbacks[ix].block_number,
+                _callbacks[ix].rvm_id,
+                _callbacks[ix].rvm_txhash,
+                _callbacks[ix].callback_ix,
+                _callbacks[ix].dest_chain_id,
+                _callbacks[ix].dest_txhash,
+                _callbacks[ix].err
+            );
+            callbacks[_callbacks[ix].rvm_txhash].push(CallbackStore(
+                _callbacks[ix].block_number,
+                _callbacks[ix].rvm_id,
+                _callbacks[ix].callback_ix,
+                _callbacks[ix].dest_chain_id,
+                _callbacks[ix].dest_txhash,
+                _callbacks[ix].err
+            ));
+        }
+    }
+
+    function getCallbacks(uint256 rvm_txhash) external view returns (CallbackStore[] memory) {
+        return callbacks[rvm_txhash];
+    }
+
     function blacklist(
         address reactive
     ) external testnetAdminOnly {
@@ -85,12 +142,25 @@ contract SystemContract is AbstractSubscriptionService, CallbackProxy, ISystemCo
         _whitelist(reactive);
     }
 
-    function cron() external callbackOnly {
+    function cron() external conditionalInit callbackOnly {
         _cron(block.number);
     }
 
-    function cron(uint256 number) external callbackOnly {
+    function cron(uint256 number) external conditionalInit callbackOnly {
         _cron(number);
+    }
+
+    function _init() internal {
+        require(!initialized, 'Already initialized');
+        initialized = true;
+        gas_price_coefficient_promille = GAS_PRICE_COEFFICIENT_PROMILLE;
+        kickback_coefficient_promille = KICKBACK_COEFFICIENT_PROMILLE;
+        extra_gas_fee = EXTRA_GAS_FEE;
+        init_bonus = INIT_BONUS;
+        max_charge_gas = MAX_CHARGE_GAS;
+        owner = payable(TESTNET_ADMIN_ADDR);
+        callback_senders[TESTNET_ADMIN_ADDR] = true;
+        callback_senders[VALIDATOR_ROOT_ADDR_1] = true;
     }
 
     function _cron(uint256 number) internal {
