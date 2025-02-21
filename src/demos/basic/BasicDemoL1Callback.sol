@@ -11,7 +11,7 @@ contract BasicDemoL1Callback is AbstractCallback {
         address indexed reactive_sender
     );
 
-    constructor() AbstractCallback(address(0)) payable {
+    constructor(address _proxy) AbstractCallback(_proxy) payable {
     }
 
     function callback(address sender) external {

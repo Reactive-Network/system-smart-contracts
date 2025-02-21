@@ -17,6 +17,7 @@ contract DynamicViewTest is Test {
     function setUp() public {
         service = new SystemContract();
         stub = new BasicDemoReactiveContract(address(service), address(service), 0xdeadbeef, address(service));
+        stub.subscribe(address(service), 0xdeadbeef);
     }
 
     function test_dynamic_view() public {

@@ -19,8 +19,11 @@ contract ViewTest is Test {
     function setUp() public {
         service = new SystemContract();
         stub[0] = new BasicDemoReactiveContract(address(service), address(service), 0xdeadbeef, address(service));
-        stub[1] = new BasicDemoReactiveContract(address(service), address(0x0), 0xdeadbeef, address(service));
+        stub[1] = new BasicDemoReactiveContract(address(service), address(0), 0xdeadbeef, address(service));
         stub[2] = new BasicDemoReactiveContract(address(service), address(service), REACTIVE_IGNORE, address(service));
+        stub[0].subscribe(address(service), 0xdeadbeef);
+        stub[1].subscribe(address(0), 0xdeadbeef);
+        stub[2].subscribe(address(service), REACTIVE_IGNORE);
     }
 
     function test_view_0() public view {
