@@ -21,7 +21,10 @@ contract SystemContract is AbstractSubscriptionService, CallbackProxy, ISystemCo
 
     address public constant SYSTEM_CONTRACT_ADDR = 0x0000000000000000000000000000000000fffFfF;
     address public constant TESTNET_ADMIN_ADDR = 0xFe5A45dB052489cbc16d882404bcFa4f6223A55E;
-    address public constant VALIDATOR_ROOT_ADDR_1 = 0x123463a4B065722E99115D6c222f267d9cABb524; // TODO: fixme!
+    address public constant VALIDATOR_ROOT_ADDR_1 = 0x97CeD11ff024e3BC4F31222D447860d1e3EcEC52;
+    address public constant VALIDATOR_ROOT_ADDR_2 = 0xb493c1e73B878541cf2E130c4ce5300ce78fC847;
+    address public constant VALIDATOR_ROOT_ADDR_3 = 0xa73659c1594923249622a17C3E3900DdFd99bbB1;
+
 
     uint256 private constant GAS_PRICE_COEFFICIENT_PROMILLE = 1250;
     uint256 private constant KICKBACK_COEFFICIENT_PROMILLE = 900;
@@ -161,6 +164,8 @@ contract SystemContract is AbstractSubscriptionService, CallbackProxy, ISystemCo
         owner = payable(TESTNET_ADMIN_ADDR);
         callback_senders[TESTNET_ADMIN_ADDR] = true;
         callback_senders[VALIDATOR_ROOT_ADDR_1] = true;
+        callback_senders[VALIDATOR_ROOT_ADDR_2] = true;
+        callback_senders[VALIDATOR_ROOT_ADDR_3] = true;
     }
 
     function _cron(uint256 number) internal {
