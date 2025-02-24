@@ -34,15 +34,14 @@ contract CallbackProxy is IPayable {
     uint256 max_charge_gas;
 
     constructor(
-        uint256 _gas_price_coefficient_promille, // Suggested: 1250
-        uint256 _kickback_coefficient_promille, // Suggested: 900
-        uint256 _extra_gas_fee, // Suggested: 50000
-        uint256 _init_bonus, // Suggested: 0.2 ether
-        uint256 _max_charge_gas, // Suggested: 30000
+        uint256 _gas_price_coefficient_promille, // Suggested: 1050
+        uint256 _kickback_coefficient_promille, // Suggested: 1000
+        uint256 _extra_gas_fee, // Suggested: 150000
+        uint256 _init_bonus, // Suggested: 0
+        uint256 _max_charge_gas, // Suggested: 50000
         address[] memory _callback_senders
     ) {
         owner = payable(msg.sender);
-        // TODO: testnet only.
         callback_senders[owner] = true;
         for (uint256 ix = 0; ix != _callback_senders.length; ++ix) {
             callback_senders[_callback_senders[ix]] = true;
@@ -122,7 +121,9 @@ contract CallbackProxy is IPayable {
         if (kickback <= address(this).balance) {
             (result,) = tx.origin.call{ value: kickback }(new bytes(0));
         }
-        emit Unkickbackable();
+        if (!result) {
+            emit Unkickbackable();
+        }
     }
 
     function _deposit(address _contract, uint256 amount) internal {
@@ -156,12 +157,13 @@ contract CallbackProxy is IPayable {
                 }
             } else {
                 debts[_contract] = amount;
-                _blacklist(_contract);
-                // TODO: use a low level call to prevent reverts when accidentally calling back to an EOA
                 bytes memory payload = abi.encodeWithSignature("pay(uint256)", debts[_contract]);
                 (bool success,) = _contract.call{ gas: max_charge_gas }(payload);
                 if (!success) {
                     emit PaymentFailure(_contract, debts[_contract]);
+                }
+                if (debts[_contract] > 0) {
+                    _blacklist(_contract);
                 }
             }
         }
