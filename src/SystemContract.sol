@@ -20,17 +20,16 @@ contract SystemContract is AbstractSubscriptionService, CallbackProxy, ISystemCo
     event Cron10000(uint256 indexed number);
 
     address public constant SYSTEM_CONTRACT_ADDR = 0x0000000000000000000000000000000000fffFfF;
-    address public constant TESTNET_ADMIN_ADDR = 0xFe5A45dB052489cbc16d882404bcFa4f6223A55E;
-    address public constant VALIDATOR_ROOT_ADDR_1 = 0x97CeD11ff024e3BC4F31222D447860d1e3EcEC52;
-    address public constant VALIDATOR_ROOT_ADDR_2 = 0xb493c1e73B878541cf2E130c4ce5300ce78fC847;
-    address public constant VALIDATOR_ROOT_ADDR_3 = 0xa73659c1594923249622a17C3E3900DdFd99bbB1;
+    address public constant OWNER_ADDR = 0x10be5Db673D1FEEA5d0D4C6d57A1098CDC007c89;
+    address public constant VALIDATOR_ROOT_ADDR_1 = 0xAa24633108FD1D87371c55ee5d7FAfA4D6cdeb26;
+    address public constant VALIDATOR_ROOT_ADDR_2 = 0x777f67156e2bb3ee9CEA6866C2656b099b67D132;
+    address public constant VALIDATOR_ROOT_ADDR_3 = 0x15AD6093CB58540ec143267B5c71E974643e1041;
 
-
-    uint256 private constant GAS_PRICE_COEFFICIENT_PROMILLE = 1250;
-    uint256 private constant KICKBACK_COEFFICIENT_PROMILLE = 900;
-    uint256 private constant EXTRA_GAS_FEE = 100000;
+    uint256 private constant GAS_PRICE_COEFFICIENT_PROMILLE = 1050;
+    uint256 private constant KICKBACK_COEFFICIENT_PROMILLE = 1000;
+    uint256 private constant EXTRA_GAS_FEE = 150000;
     uint256 private constant INIT_BONUS = 0 ether;
-    uint256 private constant MAX_CHARGE_GAS = 100000;
+    uint256 private constant MAX_CHARGE_GAS = 50000;
 
     bool private initialized;
 
@@ -76,7 +75,7 @@ contract SystemContract is AbstractSubscriptionService, CallbackProxy, ISystemCo
     }
 
     modifier testnetAdminOnly() {
-        require(msg.sender == TESTNET_ADMIN_ADDR);
+        require(msg.sender == OWNER_ADDR);
         _;
     }
 
@@ -161,8 +160,8 @@ contract SystemContract is AbstractSubscriptionService, CallbackProxy, ISystemCo
         extra_gas_fee = EXTRA_GAS_FEE;
         init_bonus = INIT_BONUS;
         max_charge_gas = MAX_CHARGE_GAS;
-        owner = payable(TESTNET_ADMIN_ADDR);
-        callback_senders[TESTNET_ADMIN_ADDR] = true;
+        owner = payable(OWNER_ADDR);
+        callback_senders[OWNER_ADDR] = true;
         callback_senders[VALIDATOR_ROOT_ADDR_1] = true;
         callback_senders[VALIDATOR_ROOT_ADDR_2] = true;
         callback_senders[VALIDATOR_ROOT_ADDR_3] = true;
