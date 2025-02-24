@@ -74,7 +74,7 @@ contract SystemContract is AbstractSubscriptionService, CallbackProxy, ISystemCo
     ) {
     }
 
-    modifier testnetAdminOnly() {
+    modifier networkAdminOnly() {
         require(msg.sender == OWNER_ADDR);
         _;
     }
@@ -134,13 +134,13 @@ contract SystemContract is AbstractSubscriptionService, CallbackProxy, ISystemCo
 
     function blacklist(
         address reactive
-    ) external testnetAdminOnly {
+    ) external networkAdminOnly {
         _blacklist(reactive);
     }
 
     function whitelist(
         address reactive
-    ) external testnetAdminOnly {
+    ) external networkAdminOnly {
         _whitelist(reactive);
     }
 
