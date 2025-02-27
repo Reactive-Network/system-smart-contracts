@@ -20,10 +20,10 @@ contract SystemContract is AbstractSubscriptionService, CallbackProxy, ISystemCo
     event Cron10000(uint256 indexed number);
 
     address public constant SYSTEM_CONTRACT_ADDR = 0x0000000000000000000000000000000000fffFfF;
-    address public constant OWNER_ADDR = 0x10be5Db673D1FEEA5d0D4C6d57A1098CDC007c89;
-    address public constant VALIDATOR_ROOT_ADDR_1 = 0xAa24633108FD1D87371c55ee5d7FAfA4D6cdeb26;
-    address public constant VALIDATOR_ROOT_ADDR_2 = 0x777f67156e2bb3ee9CEA6866C2656b099b67D132;
-    address public constant VALIDATOR_ROOT_ADDR_3 = 0x15AD6093CB58540ec143267B5c71E974643e1041;
+    address public constant OWNER_ADDR = 0xFe5A45dB052489cbc16d882404bcFa4f6223A55E;
+    address public constant VALIDATOR_ROOT_ADDR_1 = 0x75eB5FA09EdAAAA94Ff4371b6B81d0f84A0D5A0D;
+    address public constant VALIDATOR_ROOT_ADDR_2 = 0x40b005798995571C39787f425F3DE43A1D33F5Af;
+    address public constant VALIDATOR_ROOT_ADDR_3 = 0x022a5b08b0F31d7486f3B3dc5fd6c6B2770Db5Ec;
 
     uint256 private constant GAS_PRICE_COEFFICIENT_PROMILLE = 1050;
     uint256 private constant KICKBACK_COEFFICIENT_PROMILLE = 1000;
