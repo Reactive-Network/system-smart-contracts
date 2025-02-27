@@ -1,4 +1,4 @@
-# System Smart Contracts for Reactive Network
+# System Smart Contract
 
 ## Development & Deployment Instructions
 
