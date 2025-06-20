@@ -21,9 +21,9 @@ contract SystemContract is AbstractSubscriptionService, CallbackProxy, ISystemCo
 
     address public constant SYSTEM_CONTRACT_ADDR = 0x0000000000000000000000000000000000fffFfF;
     address public constant OWNER_ADDR = 0xFe5A45dB052489cbc16d882404bcFa4f6223A55E;
-    address public constant VALIDATOR_ROOT_ADDR_1 = 0x75eB5FA09EdAAAA94Ff4371b6B81d0f84A0D5A0D;
-    address public constant VALIDATOR_ROOT_ADDR_2 = 0x40b005798995571C39787f425F3DE43A1D33F5Af;
-    address public constant VALIDATOR_ROOT_ADDR_3 = 0x022a5b08b0F31d7486f3B3dc5fd6c6B2770Db5Ec;
+    address public constant VALIDATOR_ROOT_ADDR_1 = 0x8F0914495E79AB20245978b50F88BBb68A417418;
+    address public constant VALIDATOR_ROOT_ADDR_2 = 0x89e045FdF8724B2B2D11c62d2D30EaC00Bda8e88;
+    address public constant VALIDATOR_ROOT_ADDR_3 = 0x576B77e147937af61d063650e3a64461d5784de4;
 
     uint256 private constant GAS_PRICE_COEFFICIENT_PROMILLE = 1050;
     uint256 private constant KICKBACK_COEFFICIENT_PROMILLE = 1000;
