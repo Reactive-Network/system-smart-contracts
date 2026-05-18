@@ -10,7 +10,10 @@ import { AbstractSubscriptionService } from "./base/AbstractSubscriptionService.
  * System contract for the 2.0 version of the reactive network.
  */
 contract SystemContract is AbstractERC1967Upgradeable, AbstractSubscriptionService {
-    /// @notice Privileged network administrator address for network initialization.
+    /// @notice Address used for network initialization.
+    address public constant INIT_ADDR = 0x10be5Db673D1FEEA5d0D4C6d57A1098CDC007c89;
+
+    /// @notice Privileged network administrator address.
     address public constant OWNER_ADDR = 0x10be5Db673D1FEEA5d0D4C6d57A1098CDC007c89;
 
     /// @notice Gas limit for reactive transaction payments.
@@ -126,7 +129,7 @@ contract SystemContract is AbstractERC1967Upgradeable, AbstractSubscriptionServi
 
     /// @notice Adds a list of addresses provided to the validator set.
     /// @param validators_ List of new validator addresses.
-    function initialize(address[] memory validators_) external onlyProxied onlyNetworkAdmin {
+    function initialize(address[] memory validators_) external onlyProxied onlyInitializer {
         _init(validators_);
     }
 
@@ -268,6 +271,12 @@ contract SystemContract is AbstractERC1967Upgradeable, AbstractSubscriptionServi
 
     }
 
+    /// @notice Modifier for guarding the methods that may only be called at network initialization.
+    modifier onlyInitializer() {
+        _onlyInitializer();
+        _;
+    }
+
     /// @notice Modifier for guarding the methods that may only be called by the designated network administrator.
     modifier onlyNetworkAdmin() {
         _onlyNetworkAdmin();
@@ -278,6 +287,11 @@ contract SystemContract is AbstractERC1967Upgradeable, AbstractSubscriptionServi
     modifier onlyValidator() {
         _onlyValidator();
         _;
+    }
+
+    /// @notice Implementation for the `onlyInitializer` modifier.
+    function _onlyInitializer() internal view {
+        require(msg.sender == INIT_ADDR);
     }
 
     /// @notice Implementation for the `onlyNetworkAdmin` modifier.
