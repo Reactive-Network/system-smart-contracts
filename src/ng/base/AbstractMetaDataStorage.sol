@@ -5,7 +5,7 @@ pragma solidity ^0.8.29;
 /**
  * @title Contract for publicly storing the meta data of the legacy RVM contracts.
  */
-contract MetaDataStorage {
+abstract contract AbstractMetaDataStorage {
     /// @notice Dedicated address allowed to perform the initialization of this contract.
     /// @dev Update before compiling the artifacts for generating the genesis block.
     address public constant ADMIN = 0x7f19DAc8a241eAc2DD355E85fF1c2C0CDB940b90;

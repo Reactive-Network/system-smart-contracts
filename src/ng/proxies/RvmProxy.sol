@@ -2,16 +2,13 @@
 
 pragma solidity ^0.8.29;
 
-import { MetaDataStorage } from "./MetaDataStorage.sol";
+import { DelegateCall } from "../lib/DelegateCall.sol";
+import { AbstractMetaDataStorage } from "../base/AbstractMetaDataStorage.sol";
 
 /**
  * @title A proxy contract for reactive contracts imported from 1.0's RVMs. Uses `MetaDataStorage` to get the implementation address.
  */
 contract RvmProxy {
-    /// @notice Address of the meta data storage contract.
-    /// @dev Update before compiling the artifacts for generating the genesis block.
-    MetaDataStorage private constant METADATA = MetaDataStorage(0x7f19DAc8a241eAc2DD355E85fF1c2C0CDB940b90);
-
     /// @notice Address of the legacy (1.0) system contract.
     address private constant SYSTEM = 0x0000000000000000000000000000000000fffFfF;
 
@@ -37,21 +34,8 @@ contract RvmProxy {
             revert InvalidReactiveFunctionCall(msg.sig);
         }
 
-        (, address impl) = METADATA._rvm2rnk(address(this));
+        (, address impl) = AbstractMetaDataStorage(SYSTEM)._rvm2rnk(address(this));
         
-        require(impl != address(0));
-        
-        assembly {
-            calldatacopy(1, 0, calldatasize())
-            let result := delegatecall(gas(), impl, 1, calldatasize(), 1, 0)
-            returndatacopy(1, 0, returndatasize())
-            switch result
-                case 0 {
-                    revert(0, 0)
-                }
-                default {
-                    return(1, returndatasize())
-                }
-        }
+        DelegateCall.delegateCall(impl);
     }
 }
