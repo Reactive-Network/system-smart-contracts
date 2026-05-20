@@ -2,10 +2,12 @@
 
 pragma solidity ^0.8.29;
 
+import { AbstractERC1967Upgradeable } from "./AbstractERC1967Upgradeable.sol";
+
 /**
  * @title A base contract implementing emission of events signaling subscription changes requested by reactive contracts.
  */
-abstract contract AbstractSubscriptionService {
+abstract contract AbstractSubscriptionService is AbstractERC1967Upgradeable {
     /// @notice An event requesting a new subscription from the network.
     event Subscribe (
         address indexed subscriber,
@@ -45,7 +47,7 @@ abstract contract AbstractSubscriptionService {
         uint256 topic_1,
         uint256 topic_2,
         uint256 topic_3
-    ) external {
+    ) public virtual onlyProxied {
         emit Subscribe(msg.sender, chain_id, _contract, topic_0, topic_1, topic_2, topic_3);
     }
 
@@ -63,7 +65,7 @@ abstract contract AbstractSubscriptionService {
         uint256 topic_1,
         uint256 topic_2,
         uint256 topic_3
-    ) external {
+    ) public virtual onlyProxied {
         emit Unsubscribe(msg.sender, chain_id, _contract, topic_0, topic_1, topic_2, topic_3);
     }
 }
