@@ -3,6 +3,7 @@
 pragma solidity ^0.8.29;
 
 import { LogRecord, IReactive } from "./interfaces/IReactive.sol";
+import { CallbackVersion, CallbackConfiguration_V_1_0 } from "./interfaces/ICallback.sol";
 import { IERC1967Upgradeable } from "./interfaces/IERC1967Upgradeable.sol";
 import { AbstractERC1967Upgradeable } from "./base/AbstractERC1967Upgradeable.sol";
 import { AbstractSubscriptionService } from "./base/AbstractSubscriptionService.sol";
@@ -27,7 +28,7 @@ contract SystemContract is AbstractSubscriptionService {
     uint256 public constant DEFAULT_EXTRA_GAS = 100000;
 
     /// @notice Default gas price coefficient (in promille) when executing reactive transactions.
-    uint256 public DEFAULT_GAS_PRICE_COEFF_PER_1000 = 1000;
+    uint256 public constant DEFAULT_GAS_PRICE_COEFF_PER_1000 = 1000;
     
     /// @notice Indicates that this is an initial implementation that cannot be upgraded to.
     error InitialImplementation();
@@ -49,17 +50,6 @@ contract SystemContract is AbstractSubscriptionService {
     /// @notice Indicates that the supplied callback configuration version is not supported.
     /// @param version_ Callback configuration version provided.
     error InvalidCallbackVersion(CallbackVersion version_);
-
-    /// @notice List of supported callback configuration versions.
-    enum CallbackVersion { V_1_0 }
-
-    /// @notice Callback configuration struct for legacy-style callbacks.
-    struct CallbackConfiguration_V_1_0 {
-        uint256 chainId;
-        address recipient;
-        uint64 gasLimit;
-        bytes payload;
-    }
 
     /// @notice Indicates a pending callback request received from a reactive contract.
     /// @param chainId Destination chain ID.
@@ -138,11 +128,6 @@ contract SystemContract is AbstractSubscriptionService {
     /// @notice On-chain storage for callbacks successfully posted to destination chains.
     mapping(uint256 => CallbackStore[]) public _callbacks;
 
-    /// @inheritdoc IERC1967Upgradeable
-    function upgradeImpl(address newImpl_, bytes calldata data_) public virtual override onlyProxied onlyNetworkAdmin {
-        _upgradeImpl(newImpl_, data_);
-    }
-
     /// @notice Default gas limit for reactive transaction payments.
     uint256 public _maxChargeGas;
 
@@ -151,6 +136,11 @@ contract SystemContract is AbstractSubscriptionService {
 
     /// @notice Gas price coefficient (in promille) when executing reactive transactions.
     uint256 public _gasPriceCoeffPer1000;
+
+    /// @inheritdoc IERC1967Upgradeable
+    function upgradeImpl(address newImpl_, bytes calldata data_) public virtual override onlyProxied onlyNetworkAdmin {
+        _upgradeImpl(newImpl_, data_);
+    }
 
     /// @inheritdoc IERC1967Upgradeable
     function onImplUpgrade(bytes calldata /* data_ */) public virtual override onlyProxied returns (bool /* success_ */) {
@@ -173,7 +163,7 @@ contract SystemContract is AbstractSubscriptionService {
 
     /// @notice Removes a list of addresses provided from the validator set.
     /// @param validators_ List of validators to be evicted.
-    function removeCallbackSenders(address[] calldata validators_) public virtual onlyProxied onlyNetworkAdmin {
+    function removeValidators(address[] calldata validators_) public virtual onlyProxied onlyNetworkAdmin {
         for (uint256 ix = 0; ix != validators_.length; ++ix) {
             _validators[validators_[ix]] = false;
         }
@@ -241,7 +231,7 @@ contract SystemContract is AbstractSubscriptionService {
     /// @notice Fetches the known callback data associated with a given reactive transaction.
     /// @param rvmTxHash_ The hash of the reactive transaction.
     /// @return callbacks_ List of known callbacks.
-    function getCallbacks(uint256 rvmTxHash_) public virtual /* view */ onlyProxied returns (CallbackStore[] memory callbacks_) {
+    function getCallbacks(uint256 rvmTxHash_) public virtual view onlyProxied returns (CallbackStore[] memory callbacks_) {
         return _callbacks[rvmTxHash_];
     }
 
