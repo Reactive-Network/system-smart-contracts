@@ -12,7 +12,8 @@ import { ConditionallyUpgradingSystemContractMockup } from "./mockups/Conditiona
 contract SysConProxyingTest is Test {
     bytes32 public constant ERC1967_IMPL_SLOT = 0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;
 
-    address public constant SYSCON_INIT_ADDR = 0x10be5Db673D1FEEA5d0D4C6d57A1098CDC007c89;
+    address public constant SYSCON_INIT_ADDR = 0x038E06667e42782E571EaB20432b9237F9bD6B82;
+    address public constant OWNER_ADDR = 0x10be5Db673D1FEEA5d0D4C6d57A1098CDC007c89;
     address public constant ARB_ADDR = 0xF0Be5dB673D1feea5d0D4c6D57A1098Cdc007Ca7;
 
     SystemContract public _impl;
@@ -69,18 +70,18 @@ contract SysConProxyingTest is Test {
 
         vm.stopPrank();
 
-        vm.startPrank(SYSCON_INIT_ADDR);
+        vm.startPrank(OWNER_ADDR);
 
         vm.expectRevert();
         _proxy.upgradeImpl(address(broken), new bytes(0));
 
         vm.expectEmit();
-        emit AbstractSubscriptionService.Subscribe(SYSCON_INIT_ADDR, 1, SYSCON_INIT_ADDR, 0, 1, 2, 3);
+        emit AbstractSubscriptionService.Subscribe(OWNER_ADDR, 1, SYSCON_INIT_ADDR, 0, 1, 2, 3);
 
         _proxy.subscribe(1, SYSCON_INIT_ADDR, 0, 1, 2, 3);
 
         vm.expectEmit();
-        emit AbstractSubscriptionService.Unsubscribe(SYSCON_INIT_ADDR, 1, SYSCON_INIT_ADDR, 0, 1, 2, 3);
+        emit AbstractSubscriptionService.Unsubscribe(OWNER_ADDR, 1, SYSCON_INIT_ADDR, 0, 1, 2, 3);
 
         _proxy.unsubscribe(1, SYSCON_INIT_ADDR, 0, 1, 2, 3);
 
@@ -93,7 +94,7 @@ contract SysConProxyingTest is Test {
         _proxy.subscribe(1, SYSCON_INIT_ADDR, 0, 1, 2, 3);
 
         vm.expectEmit();
-        emit AbstractSubscriptionService.Unsubscribe(SYSCON_INIT_ADDR, 1, SYSCON_INIT_ADDR, 0, 1, 2, 3);
+        emit AbstractSubscriptionService.Unsubscribe(OWNER_ADDR, 1, SYSCON_INIT_ADDR, 0, 1, 2, 3);
 
         _proxy.unsubscribe(1, SYSCON_INIT_ADDR, 0, 1, 2, 3);
 

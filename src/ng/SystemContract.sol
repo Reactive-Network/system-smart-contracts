@@ -12,7 +12,7 @@ import { AbstractSubscriptionService } from "./base/AbstractSubscriptionService.
  */
 contract SystemContract is AbstractSubscriptionService {
     /// @notice Address used for network initialization.
-    address public constant INIT_ADDR = 0x10be5Db673D1FEEA5d0D4C6d57A1098CDC007c89;
+    address public constant INIT_ADDR = 0x038E06667e42782E571EaB20432b9237F9bD6B82;
 
     /// @notice Privileged network administrator address.
     address public constant OWNER_ADDR = 0x10be5Db673D1FEEA5d0D4C6d57A1098CDC007c89;
