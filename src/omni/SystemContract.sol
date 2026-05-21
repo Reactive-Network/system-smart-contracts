@@ -2,8 +2,7 @@
 
 pragma solidity ^0.8.29;
 
-import { LogRecord, IReactive } from "./interfaces/IReactive.sol";
-import { CallbackVersion, CallbackConfiguration_V_1_0 } from "./interfaces/ICallback.sol";
+import { IReactive } from "@reactive/src/interfaces/IReactive.sol";
 import { IERC1967Upgradeable } from "./interfaces/IERC1967Upgradeable.sol";
 import { AbstractERC1967Upgradeable } from "./base/AbstractERC1967Upgradeable.sol";
 import { AbstractSubscriptionService } from "./base/AbstractSubscriptionService.sol";
@@ -266,7 +265,7 @@ contract SystemContract is AbstractSubscriptionService {
     /// @notice Proxy method for calling `react()` methods on reactive contracts.
     /// @param contract_ Generated address for a legacy reactive contracted imported from a 1.0 RVM.
     /// @param log_ Log record to pass to the reactive contract.
-    function trigger(IReactive contract_, LogRecord calldata log_) public virtual onlyProxied onlyInjected {
+    function trigger(IReactive contract_, IReactive.LogRecord calldata log_) public virtual onlyProxied onlyInjected {
         if (_debts[address(contract_)] > 0) {
             revert InDebt(address(contract_), _debts[address(contract_)]);
         }
