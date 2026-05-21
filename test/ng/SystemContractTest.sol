@@ -96,6 +96,7 @@ contract SystemContractTest is Test {
 
         vm.expectEmit();
         emit ReactiveContractMockup.TestEvent();
+        emit SystemContract.BlacklistContract(address(_reactive));
 
         _proxy.trigger(_reactive, log);
 
@@ -109,6 +110,10 @@ contract SystemContractTest is Test {
         _proxy.trigger(_reactive, log);
 
         _proxy.depositTo{ value: 1 }(address(_reactive));
+
+        vm.expectEmit();
+        emit SystemContract.WhitelistContract(address(_reactive));
+
         _proxy.depositTo{ value: debt - 1 }(address(_reactive));
 
         debt = _proxy.debts(address(_reactive));

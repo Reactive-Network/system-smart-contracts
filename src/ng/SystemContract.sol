@@ -137,6 +137,9 @@ contract SystemContract is AbstractSubscriptionService {
     /// @notice Gas price coefficient (in promille) when executing reactive transactions.
     uint256 public _gasPriceCoeffPer1000;
 
+    /// @notice Transient variable to prevent emission of unnecessary `WhitelistContract()` events.
+    bool transient __whitelisted;
+
     /// @inheritdoc IERC1967Upgradeable
     function upgradeImpl(address newImpl_, bytes calldata data_) public virtual override onlyProxied onlyNetworkAdmin {
         _upgradeImpl(newImpl_, data_);
@@ -275,7 +278,9 @@ contract SystemContract is AbstractSubscriptionService {
         uint256 price = tx.gasprice > block.basefee ? tx.gasprice : block.basefee;
         uint256 adjustedGasPrice = (_extraGas + gasInit - gasleft()) * ((price * _gasPriceCoeffPer1000) / 1000);
 
+        __whitelisted = true;
         _charge(address(contract_), adjustedGasPrice);
+        __whitelisted = false;
         
         uint256 kickback = adjustedGasPrice;
 
@@ -370,7 +375,9 @@ contract SystemContract is AbstractSubscriptionService {
                 } else {
                     uint256 remainder = amount_ - _debts[contract_];
                     _debts[contract_] = 0;
-                    _whitelist(contract_);
+                    if (!__whitelisted) {
+                        _whitelist(contract_);
+                    }
                     _deposit(contract_, remainder);
                 }
             } else {

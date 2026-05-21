@@ -33,6 +33,9 @@ contract CallbackProxy is IPayable {
     uint256 init_bonus;
     uint256 max_charge_gas;
 
+    /// @notice Transient variable to prevent emission of unnecessary `WhitelistContract()` events.
+    bool transient __whitelisted;
+
     constructor(
         uint256 _gas_price_coefficient_promille, // Suggested: 1050
         uint256 _kickback_coefficient_promille, // Suggested: 1000
@@ -115,7 +118,9 @@ contract CallbackProxy is IPayable {
         }
         uint256 price = tx.gasprice > block.basefee ? tx.gasprice : block.basefee;
         uint256 adjusted_gas_price = ((price * gas_price_coefficient_promille) / 1000) * (extra_gas_fee + gas_init - gasleft());
+        __whitelisted = true;
         _charge(_contract, adjusted_gas_price);
+        __whitelisted = false;
         uint256 kickback = (adjusted_gas_price * kickback_coefficient_promille) / 1000;
         result = false;
         if (kickback <= address(this).balance) {
@@ -135,7 +140,9 @@ contract CallbackProxy is IPayable {
                 } else {
                     uint256 remainder = amount - debts[_contract];
                     debts[_contract] = 0;
-                    _whitelist(_contract);
+                    if (!__whitelisted) {
+                        _whitelist(_contract);
+                    }
                     _deposit(_contract, remainder);
                 }
             } else {
