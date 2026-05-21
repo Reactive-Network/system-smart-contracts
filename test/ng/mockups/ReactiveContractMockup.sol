@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.29;
 
-import { IReactive, LogRecord } from "../../../src/omni/interfaces/IReactive.sol";
+import { IReactive } from "@reactive/src/interfaces/IReactive.sol";
 
 /**
  * A trivial reactive contract mockup.

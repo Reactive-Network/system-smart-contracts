@@ -3,8 +3,8 @@
 pragma solidity ^0.8.29;
 
 import { Test } from "forge-std/Test.sol";
-import { IReactive, LogRecord } from "../../src/omni/interfaces/IReactive.sol";
-import { CallbackVersion, CallbackConfiguration_V_1_0 } from "../../src/omni/interfaces/ICallback.sol";
+import { IReactive } from "@reactive/src/interfaces/IReactive.sol";
+import { ISystemContract } from "@reactive/src/interfaces/ISystemContract.sol";
 import { ERC1967Proxy } from "../../src/omni/proxies/ERC1967Proxy.sol";
 import { AbstractSubscriptionService } from "../../src/omni/base/AbstractSubscriptionService.sol";
 import { SystemContract } from "../../src/omni/SystemContract.sol";
@@ -70,19 +70,19 @@ contract SystemContractTest is Test {
 
         _proxy.whitelist(address(0));
 
-        LogRecord memory log = LogRecord({
-            chain_id: 1,
-            _contract: address(_proxy),
-            topic_0: 0xcafebabe,
-            topic_1: 0,
-            topic_2: 0,
-            topic_3: 0,
+        IReactive.LogRecord memory log = IReactive.LogRecord({
+            chainId: 1,
+            contractAddress: address(_proxy),
+            topic0: 0xcafebabe,
+            topic1: 0,
+            topic2: 0,
+            topic3: 0,
             data: new bytes(0),
-            block_number: 123456,
-            op_code: 1,
-            block_hash: 0xdeadbeef,
-            tx_hash: 0xcafedead,
-            log_index: 0
+            blockNumber: 123456,
+            opCode: 1,
+            blockHash: 0xdeadbeef,
+            txHash: 0xcafedead,
+            logIndex: 0
         });
 
         vm.expectRevert();
@@ -169,7 +169,9 @@ contract SystemContractTest is Test {
 
         SystemContract.CallbackStore[] memory data = _proxy.getCallbacks(0xcafebabe);
 
-        CallbackConfiguration_V_1_0 memory conf = CallbackConfiguration_V_1_0({
+        assertEq(data.length, 1);
+
+        ISystemContract.CallbackConfiguration_V_1_0 memory conf = ISystemContract.CallbackConfiguration_V_1_0({
             chainId: 1,
             recipient: ARB_ADDR,
             gasLimit: 1e6,
@@ -179,16 +181,14 @@ contract SystemContractTest is Test {
         bytes memory encConf = abi.encode(conf);
 
         vm.expectEmit();
-        emit SystemContract.CallbackRequest(1, OWNER_ADDR, ARB_ADDR, CallbackVersion.V_1_0, encConf);
+        emit SystemContract.CallbackRequest(1, OWNER_ADDR, ARB_ADDR, ISystemContract.CallbackVersion.V_1_0, encConf);
 
-        _proxy.requestCallback(CallbackVersion.V_1_0, encConf);
+        _proxy.requestCallback(ISystemContract.CallbackVersion.V_1_0, encConf);
 
         vm.expectEmit();
-        emit SystemContract.CallbackRequest(1, OWNER_ADDR, ARB_ADDR, CallbackVersion.V_1_0, encConf);
+        emit SystemContract.CallbackRequest(1, OWNER_ADDR, ARB_ADDR, ISystemContract.CallbackVersion.V_1_0, encConf);
 
         _proxy.requestCallbackV_1_0(conf);
-
-        assertEq(data.length, 1);
 
         vm.stopPrank();
     }

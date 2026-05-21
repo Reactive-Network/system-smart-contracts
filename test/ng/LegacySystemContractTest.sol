@@ -3,7 +3,7 @@
 pragma solidity ^0.8.29;
 
 import { Test } from "forge-std/Test.sol";
-import { IReactive, LogRecord } from "../../src/omni/interfaces/IReactive.sol";
+import { IReactive } from "@reactive/src/interfaces/IReactive.sol";
 import { AbstractMetaDataStorage } from "../../src/omni/base/AbstractMetaDataStorage.sol";
 import { SystemContract } from "../../src/SystemContract.sol";
 import { LegacySystemContract } from "../../src/omni/LegacySystemContract.sol";
@@ -67,19 +67,19 @@ contract LegacySystemContractTest is Test {
 
         system.triggerCron();
 
-        LogRecord memory log = LogRecord({
-            chain_id: 1,
-            _contract: SYSTEM,
-            topic_0: 0xcafebabe,
-            topic_1: 0,
-            topic_2: 0,
-            topic_3: 0,
+        IReactive.LogRecord memory log = IReactive.LogRecord({
+            chainId: 1,
+            contractAddress: SYSTEM,
+            topic0: 0xcafebabe,
+            topic1: 0,
+            topic2: 0,
+            topic3: 0,
             data: new bytes(0),
-            block_number: 123456,
-            op_code: 1,
-            block_hash: 0xdeadbeef,
-            tx_hash: 0xcafedead,
-            log_index: 0
+            blockNumber: 123456,
+            opCode: 1,
+            blockHash: 0xdeadbeef,
+            txHash: 0xcafedead,
+            logIndex: 0
         });
 
         vm.expectRevert();
@@ -93,14 +93,14 @@ contract LegacySystemContractTest is Test {
         vm.expectEmit();
         emit ReactiveContractMockup.TestEvent();
 
-        system.trigger(IReactive(address(_proxy)), log);
+        system.trigger(IReactive(payable(address(_proxy))), log);
 
         uint256 debt = system.debt(address(_reactive));
 
         assertEq(debt > 0, true);
 
         vm.expectRevert();
-        system.trigger(IReactive(address(_proxy)), log);
+        system.trigger(IReactive(payable(address(_proxy))), log);
 
         system.depositTo{ value: debt }(address(_reactive));
 
@@ -117,7 +117,7 @@ contract LegacySystemContractTest is Test {
         vm.expectEmit();
         emit ReactiveContractMockup.TestEvent();
 
-        system.trigger(IReactive(address(_proxy)), log);
+        system.trigger(IReactive(payable(address(_proxy))), log);
 
         vm.stopPrank();
 
@@ -144,7 +144,7 @@ contract LegacySystemContractTest is Test {
         RvmProxy proxy = new RvmProxy();
 
         vm.expectRevert();
-        system.trigger(IReactive(address(proxy)), log);
+        system.trigger(IReactive(payable(address(proxy))), log);
 
         vm.stopPrank();
     }

@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.29;
 
-import { LogRecord, IReactive } from "./interfaces/IReactive.sol";
+import { IReactive } from "@reactive/src/interfaces/IReactive.sol";
 import { AbstractMetaDataStorage } from "./base/AbstractMetaDataStorage.sol";
 import { SystemContract } from "../SystemContract.sol";
 
@@ -19,7 +19,7 @@ contract LegacySystemContract is SystemContract, AbstractMetaDataStorage {
     /// @notice Proxy method for calling `react()` methods on reactive contracts imported from RVMs.
     /// @param rvmAddress_ Generated address for a legacy reactive contracted imported from a 1.0 RVM.
     /// @param log_ Log record to pass to the reactive contract.
-    function trigger(IReactive rvmAddress_, LogRecord calldata log_) external onlyInjected {
+    function trigger(IReactive rvmAddress_, IReactive.LogRecord calldata log_) external onlyInjected {
         ContractMapping memory meta = _rvm2rnk[address(rvmAddress_)];
         address rnkAddress = meta._contract;
         require(rnkAddress != address(0));
