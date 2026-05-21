@@ -3,11 +3,11 @@
 pragma solidity ^0.8.29;
 
 import { Test } from "forge-std/Test.sol";
-import { IReactive, LogRecord } from "../../src/ng/interfaces/IReactive.sol";
-import { AbstractMetaDataStorage } from "../../src/ng/base/AbstractMetaDataStorage.sol";
+import { IReactive, LogRecord } from "../../src/omni/interfaces/IReactive.sol";
+import { AbstractMetaDataStorage } from "../../src/omni/base/AbstractMetaDataStorage.sol";
 import { SystemContract } from "../../src/SystemContract.sol";
-import { LegacySystemContract } from "../../src/ng/LegacySystemContract.sol";
-import { RvmProxy } from "../../src/ng/proxies/RvmProxy.sol";
+import { LegacySystemContract } from "../../src/omni/LegacySystemContract.sol";
+import { RvmProxy } from "../../src/omni/proxies/RvmProxy.sol";
 import { ReactiveContractMockup } from "./mockups/ReactiveContractMockup.sol";
 
 /**

@@ -3,11 +3,11 @@
 pragma solidity ^0.8.29;
 
 import { Test } from "forge-std/Test.sol";
-import { IReactive, LogRecord } from "../../src/ng/interfaces/IReactive.sol";
-import { CallbackVersion, CallbackConfiguration_V_1_0 } from "../../src/ng/interfaces/ICallback.sol";
-import { ERC1967Proxy } from "../../src/ng/proxies/ERC1967Proxy.sol";
-import { AbstractSubscriptionService } from "../../src/ng/base/AbstractSubscriptionService.sol";
-import { SystemContract } from "../../src/ng/SystemContract.sol";
+import { IReactive, LogRecord } from "../../src/omni/interfaces/IReactive.sol";
+import { CallbackVersion, CallbackConfiguration_V_1_0 } from "../../src/omni/interfaces/ICallback.sol";
+import { ERC1967Proxy } from "../../src/omni/proxies/ERC1967Proxy.sol";
+import { AbstractSubscriptionService } from "../../src/omni/base/AbstractSubscriptionService.sol";
+import { SystemContract } from "../../src/omni/SystemContract.sol";
 import { BrokenSystemContractMockup } from "./mockups/BrokenSystemContractMockup.sol";
 import { ConditionallyUpgradingSystemContractMockup } from "./mockups/ConditionallyUpgradingSystemContractMockup.sol";
 import { ReactiveContractMockup } from "./mockups/ReactiveContractMockup.sol";
