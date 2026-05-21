@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.29;
 
-import { SystemContract } from "../../../src/ng/SystemContract.sol";
+import { SystemContract } from "../../../src/omni/SystemContract.sol";
 
 /**
  * @title A mockup of system contract with alternate behavior, that also validates its own upgrade data.
