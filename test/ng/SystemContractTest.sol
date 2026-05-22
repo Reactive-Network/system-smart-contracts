@@ -6,7 +6,6 @@ import { Test } from "forge-std/Test.sol";
 import { IReactive } from "@reactive/src/interfaces/IReactive.sol";
 import { ISystemContract } from "@reactive/src/interfaces/ISystemContract.sol";
 import { ERC1967Proxy } from "../../src/omni/proxies/ERC1967Proxy.sol";
-import { AbstractSubscriptionService } from "../../src/omni/base/AbstractSubscriptionService.sol";
 import { SystemContract } from "../../src/omni/SystemContract.sol";
 import { BrokenSystemContractMockup } from "./mockups/BrokenSystemContractMockup.sol";
 import { ConditionallyUpgradingSystemContractMockup } from "./mockups/ConditionallyUpgradingSystemContractMockup.sol";
@@ -219,12 +218,12 @@ contract SystemContractTest is Test {
         vm.startPrank(ARB_ADDR);
 
         vm.expectEmit();
-        emit AbstractSubscriptionService.Subscribe(ARB_ADDR, 1, SYSCON_INIT_ADDR, 0, 1, 2, 3);
+        emit SystemContract.Subscribe(ARB_ADDR, 1, SYSCON_INIT_ADDR, 0, 1, 2, 3);
 
         _proxy.subscribe(1, SYSCON_INIT_ADDR, 0, 1, 2, 3);
 
         vm.expectEmit();
-        emit AbstractSubscriptionService.Unsubscribe(ARB_ADDR, 1, SYSCON_INIT_ADDR, 0, 1, 2, 3);
+        emit SystemContract.Unsubscribe(ARB_ADDR, 1, SYSCON_INIT_ADDR, 0, 1, 2, 3);
 
         _proxy.unsubscribe(1, SYSCON_INIT_ADDR, 0, 1, 2, 3);
 
@@ -242,12 +241,12 @@ contract SystemContractTest is Test {
         _proxy.upgradeImpl(address(broken), new bytes(0));
 
         vm.expectEmit();
-        emit AbstractSubscriptionService.Subscribe(OWNER_ADDR, 1, SYSCON_INIT_ADDR, 0, 1, 2, 3);
+        emit SystemContract.Subscribe(OWNER_ADDR, 1, SYSCON_INIT_ADDR, 0, 1, 2, 3);
 
         _proxy.subscribe(1, SYSCON_INIT_ADDR, 0, 1, 2, 3);
 
         vm.expectEmit();
-        emit AbstractSubscriptionService.Unsubscribe(OWNER_ADDR, 1, SYSCON_INIT_ADDR, 0, 1, 2, 3);
+        emit SystemContract.Unsubscribe(OWNER_ADDR, 1, SYSCON_INIT_ADDR, 0, 1, 2, 3);
 
         _proxy.unsubscribe(1, SYSCON_INIT_ADDR, 0, 1, 2, 3);
 
@@ -260,7 +259,7 @@ contract SystemContractTest is Test {
         _proxy.subscribe(1, SYSCON_INIT_ADDR, 0, 1, 2, 3);
 
         vm.expectEmit();
-        emit AbstractSubscriptionService.Unsubscribe(OWNER_ADDR, 1, SYSCON_INIT_ADDR, 0, 1, 2, 3);
+        emit SystemContract.Unsubscribe(OWNER_ADDR, 1, SYSCON_INIT_ADDR, 0, 1, 2, 3);
 
         _proxy.unsubscribe(1, SYSCON_INIT_ADDR, 0, 1, 2, 3);
 
