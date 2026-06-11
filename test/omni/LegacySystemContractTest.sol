@@ -39,6 +39,12 @@ contract LegacySystemContractTest is Test {
     function test_LegacySystemContractWorkflow() public {
         LegacySystemContract system = LegacySystemContract(SYSTEM);
 
+        vm.startPrank(OWNER_ADDR);
+
+        system.init();
+
+        vm.stopPrank();
+
         AbstractMetaDataStorage.RnkRvmMetaData[] memory mappings = new AbstractMetaDataStorage.RnkRvmMetaData[](1);
         mappings[0] = AbstractMetaDataStorage.RnkRvmMetaData({
             rvmContract: address(_proxy),
@@ -87,6 +93,11 @@ contract LegacySystemContractTest is Test {
 
         vm.expectRevert();
         ReactiveContractMockup(payable(address(_proxy))).react(log);
+        
+        vm.expectEmit();
+        emit ReactiveContractMockup.TestEvent();
+
+        system.trigger(IReactive(payable(address(_proxy))), log);
 
         vm.txGasPrice(1 ether);
         

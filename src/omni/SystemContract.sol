@@ -5,12 +5,12 @@ pragma solidity ^0.8.29;
 import { ISystemContract } from "@reactive/src/interfaces/ISystemContract.sol";
 import { IReactive } from "@reactive/src/interfaces/IReactive.sol";
 import { IERC1967Upgradeable } from "./interfaces/IERC1967Upgradeable.sol";
-import { AbstractERC1967Upgradeable } from "./base/AbstractERC1967Upgradeable.sol";
+import { AbstractProxiedPayableBridge } from "./base/AbstractProxiedPayableBridge.sol";
 
 /**
  * System contract for the 2.0 version of the reactive network.
  */
-contract SystemContract is ISystemContract, AbstractERC1967Upgradeable {
+contract SystemContract is ISystemContract, AbstractProxiedPayableBridge {
     /// @notice Address used for network initialization.
     address public constant INIT_ADDR = 0x038E06667e42782E571EaB20432b9237F9bD6B82;
 
@@ -35,16 +35,8 @@ contract SystemContract is ISystemContract, AbstractERC1967Upgradeable {
     /// @notice Indicates that the contract has already been initialized.
     error AlreadyInitialized();
 
-    /// @notice Indicates that the message sender is not authorized to perform the operation.
-    error NotAuthorized();
-
     /// @notice Indicates that the method may only be called through node-injected transactions.
     error OnlyInjected();
-
-    /// @notice Indicates that reactive the contract is currently in debt.
-    /// @param contract_ Reactive contract's address.
-    /// @param debt_ Current debt.
-    error InDebt(address contract_, uint256 debt_);
 
     /// @notice Indicates that the supplied callback configuration version is not supported.
     /// @param version_ Callback configuration version provided.
@@ -107,22 +99,6 @@ contract SystemContract is ISystemContract, AbstractERC1967Upgradeable {
         bytes err;
     }
 
-    /// @notice Indicates the payment failure on the part of the reactive contract.
-    /// @param contract_ Address of the reactive contract in question.
-    /// @param amount_ Requested payment amount.
-    event PaymentFailure(address indexed contract_, uint256 indexed amount_);
-
-    /// @notice Indicates that the validator failed to accept reactive transaction kickback.
-    event Unkickbackable();
-
-    /// @notice Requests a given contract to be blacklisted.
-    /// @param reactive_ Reactive contract's address.
-    event BlacklistContract(address indexed reactive_);
-
-    /// @notice Requests a given contract to be removed from the blacklist.
-    /// @param reactive_ Reactive contract's address.
-    event WhitelistContract(address indexed reactive_);
-
     /// @notice Indicates a fresh update to the on-chain callback sotrage.
     event CallbackPosted(
         uint256 indexed blockNumber_,
@@ -137,32 +113,11 @@ contract SystemContract is ISystemContract, AbstractERC1967Upgradeable {
     /// @notice Indicates that the system contract has been successfully initialized.
     bool public _initialized;
 
-    /// @notice Indicates that the address is a known validator.
-    mapping(address => bool) internal _validators;
-
-    /// @notice Reactive contracts' current reserves for paying for reactive transactions.
-    mapping(address => uint256) public _reserves;
-
-    /// @notice Outstanding debts of reactive contracts.
-    mapping(address => uint256) public _debts;
-
     /// @notice On-chain storage for callbacks successfully posted to destination chains.
     mapping(uint256 => CallbackStore[]) public _callbacks;
 
-    /// @notice Default gas limit for reactive transaction payments.
-    uint256 public _maxChargeGas;
-
-    /// @notice Extra gas to be paid for when executing reactive transaction.
-    uint256 public _extraGas;
-
-    /// @notice Gas price coefficient (in promille) when executing reactive transactions.
-    uint256 public _gasPriceCoeffPer1000;
-
-    /// @notice Transient variable to prevent emission of unnecessary `WhitelistContract()` events.
-    bool transient __whitelisted;
-
     /// @inheritdoc IERC1967Upgradeable
-    function upgradeImpl(address newImpl_, bytes calldata data_) public virtual override onlyProxied onlyNetworkAdmin {
+    function upgradeImpl(address newImpl_, bytes calldata data_) public virtual override onlyProxied onlyOwner {
         _upgradeImpl(newImpl_, data_);
     }
 
@@ -179,53 +134,14 @@ contract SystemContract is ISystemContract, AbstractERC1967Upgradeable {
 
     /// @notice Adds a list of addresses provided to the validator set.
     /// @param validators_ List of new validator addresses.
-    function addValidators(address[] calldata validators_) public virtual onlyProxied onlyNetworkAdmin {
-        for (uint256 ix = 0; ix != validators_.length; ++ix) {
-            _validators[validators_[ix]] = true;
-        }
+    function addValidators(address[] calldata validators_) public virtual onlyProxied onlyOwner {
+        _updateOperators(validators_, true);
     }
 
     /// @notice Removes a list of addresses provided from the validator set.
     /// @param validators_ List of validators to be evicted.
-    function removeValidators(address[] calldata validators_) public virtual onlyProxied onlyNetworkAdmin {
-        for (uint256 ix = 0; ix != validators_.length; ++ix) {
-            _validators[validators_[ix]] = false;
-        }
-    }
-
-    /// @notice Method for covering reactive transaction debts.
-    receive() external virtual payable {
-        _deposit(msg.sender, msg.value);
-    }
-
-    /// @notice Method for covering reactive transaction debts.
-    /// @param contract_ Address of the reactive contract the balance of which should be updated.
-    function depositTo(address contract_) public virtual payable {
-        _deposit(contract_, msg.value);
-    }
-
-    /// @notice Returns the reactive contract's current reserves.
-    /// @param contract_ Address of the reactive contract.
-    /// @param reserves_ Current reserves.
-    /// @dev For compatibility with the legacy system contract.
-    function reserves(address contract_) public virtual view returns (uint256 reserves_) {
-        return _reserves[contract_];
-    }
-
-    /// @notice Returns the reactive contract's outstanding debt.
-    /// @param contract_ Address of the reactive contract.
-    /// @param debt_ Outstanding debt.
-    /// @dev For compatibility with the legacy system contract.
-    function debt(address contract_) public virtual view returns (uint256 debt_) {
-        return _debts[contract_];
-    }
-
-    /// @notice Returns the reactive contract's outstanding debt.
-    /// @param contract_ Address of the reactive contract.
-    /// @param debt_ Outstanding debt.
-    /// @dev For compatibility with the legacy system contract.
-    function debts(address contract_) public virtual view returns (uint256 debt_) {
-        return _debts[contract_];
+    function removeValidators(address[] calldata validators_) public virtual onlyProxied onlyOwner {
+        _updateOperators(validators_, false);
     }
 
     /// @notice Subscribes the calling contract to receive events matching the criteria specified.
@@ -266,7 +182,7 @@ contract SystemContract is ISystemContract, AbstractERC1967Upgradeable {
 
     /// @notice Stores the provided callback data on-chain.
     /// @param callbacks_ List of callbacks to be stored.
-    function storeCallbacks(CallbackInfo[] calldata callbacks_) public virtual onlyProxied onlyValidator {
+    function storeCallbacks(CallbackInfo[] calldata callbacks_) public virtual onlyProxied onlyOperators {
         for (uint256 ix = 0; ix != callbacks_.length; ++ix) {
             emit CallbackPosted(
                 callbacks_[ix].block_number,
@@ -293,18 +209,6 @@ contract SystemContract is ISystemContract, AbstractERC1967Upgradeable {
     /// @return callbacks_ List of known callbacks.
     function getCallbacks(uint256 rvmTxHash_) public virtual view onlyProxied returns (CallbackStore[] memory callbacks_) {
         return _callbacks[rvmTxHash_];
-    }
-
-    /// @notice Requests blacklisting of a given reactive contract.
-    /// @param reactive_ Reactive contract's address.
-    function blacklist(address reactive_) public virtual onlyProxied onlyNetworkAdmin {
-        _blacklist(reactive_);
-    }
-
-    /// @notice Requests whitelisting of a given reactive contract.
-    /// @param reactive_ Reactive contract's address.
-    function whitelist(address reactive_) public virtual onlyProxied onlyNetworkAdmin {
-        _whitelist(reactive_);
     }
 
     /// @notice Requests the posting of a callback to some destination network.
@@ -341,16 +245,15 @@ contract SystemContract is ISystemContract, AbstractERC1967Upgradeable {
         
         uint256 kickback = adjustedGasPrice;
 
-        bool result = false;
+        bool result = true;
 
-        if (kickback <= address(this).balance) {
+        if (kickback > 0 && kickback <= address(this).balance) {
             (result,) = tx.origin.call{ value: kickback }(new bytes(0));
         }
 
         if (!result) {
             emit Unkickbackable();
         }
-
     }
 
     /// @notice Modifier for guarding the methods that may only be called at network initialization.
@@ -364,26 +267,9 @@ contract SystemContract is ISystemContract, AbstractERC1967Upgradeable {
         require(msg.sender == INIT_ADDR);
     }
 
-    /// @notice Modifier for guarding the methods that may only be called by the designated network administrator.
-    modifier onlyNetworkAdmin() {
-        _onlyNetworkAdmin();
-        _;
-    }
-
-    /// @notice Implementation for the `onlyNetworkAdmin` modifier.
-    function _onlyNetworkAdmin() internal view {
-        require(msg.sender == OWNER_ADDR);
-    }
-
-    /// @notice Modifier for guarding the methods that may only be called by network validators.
-    modifier onlyValidator() {
-        _onlyValidator();
-        _;
-    }
-
-    /// @notice Implementation for the `onlyValidator` modifier.
-    function _onlyValidator() internal view {
-        if (!_validators[msg.sender]) {
+    /// @inheritdoc AbstractProxiedPayableBridge
+    function _onlyOwner() internal virtual override view {
+        if (msg.sender != OWNER_ADDR) {
             revert NotAuthorized();
         }
     }
@@ -413,62 +299,12 @@ contract SystemContract is ISystemContract, AbstractERC1967Upgradeable {
         _maxChargeGas = DEFAULT_MAX_CHARGE_GAS;
         _extraGas = DEFAULT_EXTRA_GAS;
         _gasPriceCoeffPer1000 = DEFAULT_GAS_PRICE_COEFF_PER_1000;
-        
-        _validators[OWNER_ADDR] = true;
 
-        for (uint256 ix = 0; ix != validators_.length; ++ix) {
-            _validators[validators_[ix]] = true;
-        }
-    }
+        address[] memory owner = new address[](1);
+        owner[0] = OWNER_ADDR;
 
-    /// @notice Deposits the specified amount to a given contract's balance.
-    /// @param contract_ Reactive contract's address.
-    /// @param amount_ Amount to be added to the balance.
-    function _deposit(address contract_, uint256 amount_) internal {
-        if (amount_ > 0) {
-            if (_debts[contract_] > 0) {
-                if (amount_ < _debts[contract_]) {
-                    _debts[contract_] -= amount_;
-                } else {
-                    uint256 remainder = amount_ - _debts[contract_];
-                    _debts[contract_] = 0;
-                    if (!__whitelisted) {
-                        _whitelist(contract_);
-                    }
-                    _deposit(contract_, remainder);
-                }
-            } else {
-                _reserves[contract_] += amount_;
-            }
-        }
-    }
-
-    /// @notice Attempt to charge the given reactive contract for the amount specified.
-    /// @param contract_ Reactive contract's address.
-    /// @param amount_ Amount to be charged.
-    function _charge(address contract_, uint256 amount_) internal {
-        if (amount_ > 0) {
-            if (_reserves[contract_] > 0) {
-                if (amount_ <= _reserves[contract_]) {
-                    _reserves[contract_] -= amount_;
-                } else {
-                    uint256 remainder = amount_ - _reserves[contract_];
-                    _reserves[contract_] = 0;
-                    _charge(contract_, remainder);
-                }
-            } else {
-                uint256 currentDebt = _debts[contract_];
-                _debts[contract_] += amount_;
-                bytes memory payload = abi.encodeWithSignature("pay(uint256)", _debts[contract_]);
-                (bool success,) = contract_.call{ gas: _maxChargeGas }(payload);
-                if (!success) {
-                    emit PaymentFailure(contract_, _debts[contract_]);
-                }
-                if (currentDebt == 0 && _debts[contract_] > 0) {
-                    _blacklist(contract_);
-                }
-            }
-        }
+        _updateOperators(owner, true);
+        _updateOperators(validators_, true);
     }
 
     /// @notice Requests the posting of a callback to some destination network.
@@ -482,17 +318,5 @@ contract SystemContract is ISystemContract, AbstractERC1967Upgradeable {
         } else {
             revert InvalidCallbackVersion(version_);
         }
-    }
-
-    /// @notice Requests blacklisting of a given reactive contract.
-    /// @param reactive_ Reactive contract's address.
-    function _blacklist(address reactive_) internal {
-        emit BlacklistContract(reactive_);
-    }
-
-    /// @notice Requests whitelisting of a given reactive contract.
-    /// @param reactive_ Reactive contract's address.
-    function _whitelist(address reactive_) internal {
-        emit WhitelistContract(reactive_);
     }
 }

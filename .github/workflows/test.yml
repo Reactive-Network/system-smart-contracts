@@ -17,4 +17,4 @@ jobs:
           version: stable
  
       - name: Run tests
-        run: forge coverage -vvv --no-match-coverage ^test/
+        run: forge coverage -vvv --no-match-coverage '^(test|src/demos)/'

@@ -5,6 +5,7 @@ pragma solidity ^0.8.29;
 import { Test } from "forge-std/Test.sol";
 import { IReactive } from "@reactive/src/interfaces/IReactive.sol";
 import { ISystemContract } from "@reactive/src/interfaces/ISystemContract.sol";
+import { AbstractProxiedPayableBridge } from "../../src/omni/base/AbstractProxiedPayableBridge.sol";
 import { ERC1967Proxy } from "../../src/omni/proxies/ERC1967Proxy.sol";
 import { SystemContract } from "../../src/omni/SystemContract.sol";
 import { BrokenSystemContractMockup } from "./mockups/BrokenSystemContractMockup.sol";
@@ -60,12 +61,12 @@ contract SystemContractTest is Test {
         assertEq(success, true);
 
         vm.expectEmit();
-        emit SystemContract.BlacklistContract(address(0));
+        emit AbstractProxiedPayableBridge.BlacklistContract(address(0));
 
         _proxy.blacklist(address(0));
 
         vm.expectEmit();
-        emit SystemContract.WhitelistContract(address(0));
+        emit AbstractProxiedPayableBridge.WhitelistContract(address(0));
 
         _proxy.whitelist(address(0));
 
@@ -95,7 +96,7 @@ contract SystemContractTest is Test {
 
         vm.expectEmit();
         emit ReactiveContractMockup.TestEvent();
-        emit SystemContract.BlacklistContract(address(_reactive));
+        emit AbstractProxiedPayableBridge.BlacklistContract(address(_reactive));
 
         _proxy.trigger(_reactive, log);
 
@@ -111,7 +112,7 @@ contract SystemContractTest is Test {
         _proxy.depositTo{ value: 1 }(address(_reactive));
 
         vm.expectEmit();
-        emit SystemContract.WhitelistContract(address(_reactive));
+        emit AbstractProxiedPayableBridge.WhitelistContract(address(_reactive));
 
         _proxy.depositTo{ value: debt - 1 }(address(_reactive));
 
@@ -174,7 +175,7 @@ contract SystemContractTest is Test {
             chainId: 1,
             recipient: ARB_ADDR,
             gasLimit: 1e6,
-            payload: new bytes(0)
+            payload: new bytes(32)
         });
 
         bytes memory encConf = abi.encode(conf);

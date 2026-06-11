@@ -30,8 +30,8 @@ contract LegacySystemContract is SystemContract, AbstractMetaDataStorage {
         uint256 adjustedGasPrice = (extra_gas_fee + gasInit - gasleft()) * price;
         _charge(rnkAddress, adjustedGasPrice);
         uint256 kickback = (adjustedGasPrice * kickback_coefficient_promille) / 1000;
-        bool result = false;
-        if (kickback <= address(this).balance) {
+        bool result = true;
+        if (kickback > 0 && kickback <= address(this).balance) {
             (result,) = tx.origin.call{ value: kickback }(new bytes(0));
         }
         if (!result) {
