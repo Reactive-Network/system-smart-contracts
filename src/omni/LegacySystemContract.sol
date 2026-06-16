@@ -28,7 +28,9 @@ contract LegacySystemContract is SystemContract, AbstractMetaDataStorage {
         rvmAddress_.react(log_);
         uint256 price = tx.gasprice > block.basefee ? tx.gasprice : block.basefee;
         uint256 adjustedGasPrice = (extra_gas_fee + gasInit - gasleft()) * price;
+        __whitelisted = true;
         _charge(rnkAddress, adjustedGasPrice);
+        __whitelisted = false;
         uint256 kickback = (adjustedGasPrice * kickback_coefficient_promille) / 1000;
         bool result = true;
         if (kickback > 0 && kickback <= address(this).balance) {
