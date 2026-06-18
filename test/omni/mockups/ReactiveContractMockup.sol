@@ -22,8 +22,10 @@ contract ReactiveContractMockup is IReactive {
     receive() external payable {
     }
 
-    function react(LogRecord calldata /* log */) external {
+    function react(LogRecord calldata log_) external {
         require(_vm);
+
+        require(log_.chainId == 1);
 
         emit TestEvent();
     }

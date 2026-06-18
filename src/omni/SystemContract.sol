@@ -43,7 +43,7 @@ contract SystemContract is ISystemContract, AbstractProxiedPayableBridge {
     error InvalidCallbackVersion(CallbackVersion version_);
 
     /// @notice An event requesting a new subscription from the network.
-    event Subscribe (
+    event Subscribe(
         address indexed subscriber,
         uint256 indexed chain_id,
         address indexed _contract,
@@ -54,7 +54,7 @@ contract SystemContract is ISystemContract, AbstractProxiedPayableBridge {
     );
 
     /// @notice An event requesting the removal of an existing subscription.
-    event Unsubscribe (
+    event Unsubscribe(
         address indexed subscriber,
         uint256 indexed chain_id,
         address indexed _contract,
@@ -65,18 +65,24 @@ contract SystemContract is ISystemContract, AbstractProxiedPayableBridge {
     );
 
     /// @notice Indicates a pending callback request received from a reactive contract.
-    /// @param chainId Destination chain ID.
-    /// @param sender Message sender's address.
-    /// @param recipient Destination contract's address.
-    /// @param version Callback configuration version.
-    /// @param configuration ABI-encoded callback configuration struct in the format matching the `version` provided.
+    /// @param chainId_ Destination chain ID.
+    /// @param sender_ Message sender's address.
+    /// @param recipient_ Destination contract's address.
+    /// @param version_ Callback configuration version.
+    /// @param configuration_ ABI-encoded callback configuration struct in the format matching the `version` provided.
     event CallbackRequest(
-        uint256 indexed chainId,
-        address indexed sender,
-        address indexed recipient,
-        CallbackVersion version,
-        bytes configuration
+        uint256 indexed chainId_,
+        address indexed sender_,
+        address indexed recipient_,
+        CallbackVersion version_,
+        bytes configuration_
     );
+
+    /// @notice Indicates that the call to `react()` reverted when processing a log record.
+    /// @param reactive_ Address of the reactive contract.
+    /// @param log_ Log record sent to the reactive contract.
+    /// @param error_ Raw error data received.
+    event ReactiveContractReverted(address indexed reactive_, IReactive.LogRecord log_, bytes error_);
 
     /// @notice A struct for suppling callback info to the on-chain callback data storage.
     struct CallbackInfo {
@@ -234,7 +240,10 @@ contract SystemContract is ISystemContract, AbstractProxiedPayableBridge {
 
         uint256 gasInit = gasleft();
 
-        contract_.react(log_);
+        try contract_.react(log_) { }
+        catch (bytes memory err) {
+            emit ReactiveContractReverted(address(contract_), log_, err);
+        }
 
         uint256 price = tx.gasprice > block.basefee ? tx.gasprice : block.basefee;
         uint256 adjustedGasPrice = (_extraGas + gasInit - gasleft()) * ((price * _gasPriceCoeffPer1000) / 1000);
