@@ -31,7 +31,7 @@ contract LegacySystemContract is SystemContract, AbstractMetaDataStorage {
         require(rnkAddress != address(0));
         require(debts[address(rnkAddress)] == 0, "Reactive transaction target currently in debt");
         uint256 gasInit = gasleft();
-        try rvmAddress_.react(log_) { }
+        try rvmAddress_.react{ gas: gasInit - extra_gas_fee }(log_) { }
         catch (bytes memory err) {
             emit ReactiveContractReverted(address(rvmAddress_), log_, err);
         }

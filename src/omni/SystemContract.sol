@@ -240,7 +240,7 @@ contract SystemContract is ISystemContract, AbstractProxiedPayableBridge {
 
         uint256 gasInit = gasleft();
 
-        try contract_.react(log_) { }
+        try contract_.react{ gas: gasInit - _extraGas }(log_) { }
         catch (bytes memory err) {
             emit ReactiveContractReverted(address(contract_), log_, err);
         }
