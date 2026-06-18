@@ -16,6 +16,12 @@ contract LegacySystemContract is SystemContract, AbstractMetaDataStorage {
     /// @notice Indicates that the method may only be called through node-injected transactions.
     error OnlyInjected();
 
+    /// @notice Indicates that the call to `react()` reverted when processing a log record.
+    /// @param reactive_ Address of the reactive contract.
+    /// @param log_ Log record sent to the reactive contract.
+    /// @param error_ Raw error data received.
+    event ReactiveContractReverted(address indexed reactive_, IReactive.LogRecord log_, bytes error_);
+
     /// @notice Proxy method for calling `react()` methods on reactive contracts imported from RVMs.
     /// @param rvmAddress_ Generated address for a legacy reactive contracted imported from a 1.0 RVM.
     /// @param log_ Log record to pass to the reactive contract.
@@ -25,7 +31,10 @@ contract LegacySystemContract is SystemContract, AbstractMetaDataStorage {
         require(rnkAddress != address(0));
         require(debts[address(rnkAddress)] == 0, "Reactive transaction target currently in debt");
         uint256 gasInit = gasleft();
-        rvmAddress_.react(log_);
+        try rvmAddress_.react(log_) { }
+        catch (bytes memory err) {
+            emit ReactiveContractReverted(address(rvmAddress_), log_, err);
+        }
         uint256 price = tx.gasprice > block.basefee ? tx.gasprice : block.basefee;
         uint256 adjustedGasPrice = (extra_gas_fee + gasInit - gasleft()) * price;
         __whitelisted = true;

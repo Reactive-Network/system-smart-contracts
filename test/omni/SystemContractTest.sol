@@ -274,4 +274,32 @@ contract SystemContractTest is Test {
 
         vm.stopPrank();
     }
+
+    function test_SystemContractReactErrorHandling() public {
+        address[] memory validators = new address[](1);
+        validators[0] = address(SYSCON_INIT_ADDR);
+
+        vm.startPrank(SYSCON_INIT_ADDR);
+
+        _proxy.initialize(validators);
+
+        IReactive.LogRecord memory log = IReactive.LogRecord({
+            chainId: 2,
+            contractAddress: address(_proxy),
+            topic0: 0xcafebabe,
+            topic1: 0,
+            topic2: 0,
+            topic3: 0,
+            data: new bytes(0),
+            blockNumber: 123456,
+            opCode: 1,
+            blockHash: 0xdeadbeef,
+            txHash: 0xcafedead,
+            logIndex: 0
+        });
+
+        _proxy.trigger(_reactive, log);
+
+        vm.stopPrank();
+    }
 }

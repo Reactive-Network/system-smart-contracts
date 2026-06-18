@@ -240,4 +240,45 @@ contract LegacySystemContractTest is Test {
 
         vm.stopPrank();
     }
+
+    function test_LegacySystemContractReactErrorHandling() public {
+        LegacySystemContract system = LegacySystemContract(SYSTEM);
+
+        vm.startPrank(OWNER_ADDR);
+
+        system.init();
+
+        vm.stopPrank();
+
+        AbstractMetaDataStorage.RnkRvmMetaData[] memory mappings = new AbstractMetaDataStorage.RnkRvmMetaData[](1);
+        mappings[0] = AbstractMetaDataStorage.RnkRvmMetaData({
+            rvmContract: address(_proxy),
+            rvmId: address(1),
+            rnkContract: address(_reactive)
+        });
+
+        vm.startPrank(SYSCON_INIT_ADDR);
+
+        system.updateMetaData(mappings);
+        system.finalize();
+
+        IReactive.LogRecord memory log = IReactive.LogRecord({
+            chainId: 2,
+            contractAddress: SYSTEM,
+            topic0: 0xcafebabe,
+            topic1: 0,
+            topic2: 0,
+            topic3: 0,
+            data: new bytes(0),
+            blockNumber: 123456,
+            opCode: 1,
+            blockHash: 0xdeadbeef,
+            txHash: 0xcafedead,
+            logIndex: 0
+        });
+
+        system.trigger(IReactive(payable(address(_proxy))), log);
+
+        vm.stopPrank();
+    }
 }
