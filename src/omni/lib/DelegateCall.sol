@@ -9,7 +9,7 @@ library DelegateCall {
     /// @notice `delegatecall` proxy for implementation contract.
     /// @param impl_ Adress of the implementation contract.
     function delegateCall(address impl_) internal {
-        require(impl_ != address(0));
+        require(impl_.code.length > 0);
         assembly {
             calldatacopy(1, 0, calldatasize())
             let result := delegatecall(gas(), impl_, 1, calldatasize(), 1, 0)

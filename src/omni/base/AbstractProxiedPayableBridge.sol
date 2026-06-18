@@ -3,7 +3,6 @@
 pragma solidity ^0.8.29;
 
 import { IPayable } from "@reactive/src/interfaces/IPayable.sol";
-import { IPayer } from "@reactive/src/interfaces/IPayer.sol";
 import { AbstractERC1967Upgradeable } from "./AbstractERC1967Upgradeable.sol";
 
 /**

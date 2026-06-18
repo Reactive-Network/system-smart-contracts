@@ -43,25 +43,39 @@ contract SystemContract is ISystemContract, AbstractProxiedPayableBridge {
     error InvalidCallbackVersion(CallbackVersion version_);
 
     /// @notice An event requesting a new subscription from the network.
+    /// @param subscriber Address of the subscribing reactive contract.
+    /// @param chainId EIP155 source chain ID for the event (as a `uint256`), or `0` for all chains.
+    /// @param contractAddress Contract address to monitor, or `0` for all contracts.
+    /// @param topic0 Topic 0 to monitor, or `REACTIVE_IGNORE` for all topics.
+    /// @param topic1 Topic 1 to monitor, or `REACTIVE_IGNORE` for all topics.
+    /// @param topic2 Topic 2 to monitor, or `REACTIVE_IGNORE` for all topics.
+    /// @param topic3 Topic 3 to monitor, or `REACTIVE_IGNORE` for all topics.
     event Subscribe(
         address indexed subscriber,
-        uint256 indexed chain_id,
-        address indexed _contract,
-        uint256 topic_0,
-        uint256 topic_1,
-        uint256 topic_2,
-        uint256 topic_3
+        uint256 indexed chainId,
+        address indexed contractAddress,
+        uint256 topic0,
+        uint256 topic1,
+        uint256 topic2,
+        uint256 topic3
     );
 
     /// @notice An event requesting the removal of an existing subscription.
+    /// @param subscriber Address of the unsubscribing reactive contract.
+    /// @param chainId Chain ID criterion of the original subscription.
+    /// @param contractAddress Contract address criterion of the original subscription.
+    /// @param topic0 Topic 0 criterion of the original subscription.
+    /// @param topic1 Topic 1 criterion of the original subscription.
+    /// @param topic2 Topic 2 criterion of the original subscription.
+    /// @param topic3 Topic 3 criterion of the original subscription.
     event Unsubscribe(
         address indexed subscriber,
-        uint256 indexed chain_id,
-        address indexed _contract,
-        uint256 topic_0,
-        uint256 topic_1,
-        uint256 topic_2,
-        uint256 topic_3
+        uint256 indexed chainId,
+        address indexed contractAddress,
+        uint256 topic0,
+        uint256 topic1,
+        uint256 topic2,
+        uint256 topic3
     );
 
     /// @notice Indicates a pending callback request received from a reactive contract.
@@ -151,39 +165,39 @@ contract SystemContract is ISystemContract, AbstractProxiedPayableBridge {
     }
 
     /// @notice Subscribes the calling contract to receive events matching the criteria specified.
-    /// @param chain_id EIP155 source chain ID for the event (as a `uint256`), or `0` for all chains.
-    /// @param _contract Contract address to monitor, or `0` for all contracts.
-    /// @param topic_0 Topic 0 to monitor, or `REACTIVE_IGNORE` for all topics.
-    /// @param topic_1 Topic 1 to monitor, or `REACTIVE_IGNORE` for all topics.
-    /// @param topic_2 Topic 2 to monitor, or `REACTIVE_IGNORE` for all topics.
-    /// @param topic_3 Topic 3 to monitor, or `REACTIVE_IGNORE` for all topics.
+    /// @param chainId EIP155 source chain ID for the event (as a `uint256`), or `0` for all chains.
+    /// @param contractAddress Contract address to monitor, or `0` for all contracts.
+    /// @param topic0 Topic 0 to monitor, or `REACTIVE_IGNORE` for all topics.
+    /// @param topic1 Topic 1 to monitor, or `REACTIVE_IGNORE` for all topics.
+    /// @param topic2 Topic 2 to monitor, or `REACTIVE_IGNORE` for all topics.
+    /// @param topic3 Topic 3 to monitor, or `REACTIVE_IGNORE` for all topics.
     function subscribe(
-        uint256 chain_id,
-        address _contract,
-        uint256 topic_0,
-        uint256 topic_1,
-        uint256 topic_2,
-        uint256 topic_3
+        uint256 chainId,
+        address contractAddress,
+        uint256 topic0,
+        uint256 topic1,
+        uint256 topic2,
+        uint256 topic3
     ) public virtual override onlyProxied {
-        emit Subscribe(msg.sender, chain_id, _contract, topic_0, topic_1, topic_2, topic_3);
+        emit Subscribe(msg.sender, chainId, contractAddress, topic0, topic1, topic2, topic3);
     }
 
     /// @notice Removes active subscription of the calling contract, matching the criteria specified, if one exists.
-    /// @param chain_id Chain ID criterion of the original subscription.
-    /// @param _contract Contract address criterion of the original subscription.
-    /// @param topic_0 Topic 0 criterion of the original subscription.
-    /// @param topic_1 Topic 0 criterion of the original subscription.
-    /// @param topic_2 Topic 0 criterion of the original subscription.
-    /// @param topic_3 Topic 0 criterion of the original subscription.
+    /// @param chainId Chain ID criterion of the original subscription.
+    /// @param contractAddress Contract address criterion of the original subscription.
+    /// @param topic0 Topic 0 criterion of the original subscription.
+    /// @param topic1 Topic 1 criterion of the original subscription.
+    /// @param topic2 Topic 2 criterion of the original subscription.
+    /// @param topic3 Topic 3 criterion of the original subscription.
     function unsubscribe(
-        uint256 chain_id,
-        address _contract,
-        uint256 topic_0,
-        uint256 topic_1,
-        uint256 topic_2,
-        uint256 topic_3
+        uint256 chainId,
+        address contractAddress,
+        uint256 topic0,
+        uint256 topic1,
+        uint256 topic2,
+        uint256 topic3
     ) public virtual override onlyProxied {
-        emit Unsubscribe(msg.sender, chain_id, _contract, topic_0, topic_1, topic_2, topic_3);
+        emit Unsubscribe(msg.sender, chainId, contractAddress, topic0, topic1, topic2, topic3);
     }
 
     /// @notice Stores the provided callback data on-chain.
