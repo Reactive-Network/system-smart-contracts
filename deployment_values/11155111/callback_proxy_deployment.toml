@@ -1,0 +1,15 @@
+[sepolia]
+endpoint_url = "${SEPOLIA_RPC}"
+
+[sepolia.uint]
+salt = "0xdeadbeef"
+max_charge_gas = 50000
+extra_gas = 100000
+gas_price_coeff_per_1000 = 1000
+
+[sepolia.address]
+callback_sender_1 = "0x9f039F2A433A9Bc6b7d6d1b76744E2606f50439a"
+callback_sender_2 = "0x0000000000000000000000000000000000000000"
+callback_sender_3 = "0x0000000000000000000000000000000000000000"
+callback_proxy_implementation = "0x6E46f55C445fbCb73B87EBe7fB271E7ffdcD4442"
+callback_proxy = "0x86D1E4cdcaF710767Da0E2dA51E9Bf8b28FC45a1"
