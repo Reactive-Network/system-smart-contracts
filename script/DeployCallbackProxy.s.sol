@@ -7,6 +7,7 @@ import { Script } from "forge-std/Script.sol";
 import { Config } from "forge-std/Config.sol";
 import { console } from "forge-std/console.sol";
 import { CallbackProxy } from "../src/omni/CallbackProxy.sol";
+import { IL1FeeOracle } from "../src/omni/interfaces/IL1FeeOracle.sol";
 import { CallbackProxyDeployer } from "../src/omni/deployers/CallbackProxyDeployer.sol";
 
 /**
@@ -33,6 +34,8 @@ contract DeployCallbackProxy is Script, Config {
         uint256 maxChargeGas = config.get("max_charge_gas").toUint256();
         uint256 extraGas = config.get("extra_gas").toUint256();
         uint256 gasPriceCoeffPer1000 = config.get("gas_price_coeff_per_1000").toUint256();
+        uint256 calldataGasPerByte = config.get("calldata_gas_per_byte").toUint256();
+        IL1FeeOracle l1FeeOracle = IL1FeeOracle(config.get("l1_fee_oracle").toAddress());
 
         address callbackSender1 = config.get("callback_sender_1").toAddress();
         address callbackSender2 = config.get("callback_sender_2").toAddress();
@@ -55,6 +58,8 @@ contract DeployCallbackProxy is Script, Config {
         console.log("Max Charge Gas:", maxChargeGas);
         console.log("Extra Gas:", extraGas);
         console.log("Gas Price Coefficient (per 1000th):", gasPriceCoeffPer1000);
+        console.log("Calldata Gas per Byte:", calldataGasPerByte);
+        console.log("L1 Fee Oracle:", address(l1FeeOracle));
         console.log("Callback Sender #1:", callbackSender1);
         console.log("Callback Sender #2:", callbackSender2);
         console.log("Callback Sender #3:", callbackSender3);
@@ -69,7 +74,7 @@ contract DeployCallbackProxy is Script, Config {
 
         vm.recordLogs();
 
-        new CallbackProxyDeployer(salt, maxChargeGas, extraGas, gasPriceCoeffPer1000, _callbackSenders);
+        new CallbackProxyDeployer(salt, maxChargeGas, extraGas, gasPriceCoeffPer1000, calldataGasPerByte, l1FeeOracle, _callbackSenders);
 
         Vm.Log[] memory logs = vm.getRecordedLogs();
 

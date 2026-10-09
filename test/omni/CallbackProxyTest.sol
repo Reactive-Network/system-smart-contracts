@@ -8,6 +8,7 @@ import { CallbackContractMockup } from "./mockups/CallbackContractMockup.sol";
 import { ConditionallyUpgradingCallbackProxyMockup } from "./mockups/ConditionallyUpgradingCallbackProxyMockup.sol";
 import { ERC1967Proxy } from "../../src/omni/proxies/ERC1967Proxy.sol";
 import { CallbackProxy } from "../../src/omni/CallbackProxy.sol";
+import { IL1FeeOracle } from "../../src/omni/interfaces/IL1FeeOracle.sol";
 import { CallbackProxyDeployer } from "../../src/omni/deployers/CallbackProxyDeployer.sol";
 
 /**
@@ -33,7 +34,7 @@ contract CallbackProxyTest is Test {
 
         vm.recordLogs();
 
-        new CallbackProxyDeployer(0, 50000, 100000, 1000, senders);
+        new CallbackProxyDeployer(0, 50000, 100000, 1000, 0, IL1FeeOracle(address(0)), senders);
 
         Vm.Log[] memory logs = vm.getRecordedLogs();
 
@@ -196,7 +197,7 @@ contract CallbackProxyTest is Test {
 
         vm.recordLogs();
 
-        new CallbackProxyDeployer(0xdeadbeef, 50000, 100000, 1000, senders);
+        new CallbackProxyDeployer(0xdeadbeef, 50000, 100000, 1000, 0, IL1FeeOracle(address(0)), senders);
 
         Vm.Log[] memory logs = vm.getRecordedLogs();
 
