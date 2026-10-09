@@ -168,7 +168,12 @@ abstract contract AbstractProxiedPayableBridge is IPayable, AbstractERC1967Upgra
                 uint256 currentDebt = _debts[contract_];
                 _debts[contract_] += amount_;
                 bytes memory payload = abi.encodeWithSignature("pay(uint256)", _debts[contract_]);
-                (bool success,) = contract_.call{ gas: _maxChargeGas }(payload);
+                bool success;
+                uint256 chargeGas = _maxChargeGas;
+                // Return data is not copied, so the contract cannot exceed the charging budget with a huge return value.
+                assembly ("memory-safe") {
+                    success := call(chargeGas, contract_, 0, add(payload, 0x20), mload(payload), 0, 0)
+                }
                 if (!success) {
                     emit PaymentFailure(contract_, _debts[contract_]);
                 }
