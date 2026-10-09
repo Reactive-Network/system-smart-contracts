@@ -81,6 +81,49 @@ contract CallbackProxyFeesTest is Test {
         assertEq(address(_proxy._l1FeeOracle()), address(0x42));
     }
 
+    function test_UpgradeInitializedProxy() public {
+        CallbackProxy impl = new CallbackProxy();
+        IL1FeeOracle oracle = new L1FeeOracleMockup();
+
+        vm.startPrank(ARB_ADDR);
+
+        vm.expectRevert(AbstractProxiedPayableBridge.NotAuthorized.selector);
+        _proxy.upgradeImpl(address(impl), abi.encode(uint256(16), oracle));
+
+        vm.expectRevert(AbstractProxiedPayableBridge.NotAuthorized.selector);
+        _proxy.onImplUpgrade(abi.encode(uint256(16), oracle));
+
+        vm.stopPrank();
+
+        vm.startPrank(OWNER_ADDR);
+
+        vm.expectRevert(AbstractProxiedPayableBridge.NotAuthorized.selector);
+        _proxy.onImplUpgrade(abi.encode(uint256(16), oracle));
+
+        vm.expectRevert();
+        _proxy.upgradeImpl(address(impl), "");
+
+        _proxy.upgradeImpl(address(impl), abi.encode(uint256(16), oracle));
+
+        vm.stopPrank();
+
+        assertEq(_proxy._calldataGasPerByte(), 16);
+        assertEq(address(_proxy._l1FeeOracle()), address(oracle));
+        assertEq(_proxy._owner(), OWNER_ADDR);
+        assertEq(_proxy._extraGas(), EXTRA_GAS);
+        assertEq(_proxy._maxChargeGas(), MAX_CHARGE_GAS);
+        assertEq(_proxy._gasPriceCoeffPer1000(), COEFF);
+        assertTrue(_proxy._operators(OWNER_ADDR));
+
+        CallbackContractMockup cbk = _fundedCallback();
+
+        vm.expectEmit();
+        emit CallbackContractMockup.TestEvent("test message");
+
+        vm.prank(OWNER_ADDR, OWNER_ADDR);
+        _proxy.deliverCallback(ISystemContract.CallbackVersion.V_1_0, _config(address(cbk), abi.encodeWithSignature("callback(address,string)", ARB_ADDR, "test message")));
+    }
+
     function test_CalldataGasPerByte() public {
         CallbackContractMockup cbk = _fundedCallback();
         bytes memory config = _config(address(cbk), abi.encodeWithSignature("callback(address,string)", ARB_ADDR, "test message"));

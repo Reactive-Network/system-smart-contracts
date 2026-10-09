@@ -63,8 +63,19 @@ contract CallbackProxy is AbstractProxiedPayableBridge {
     }
 
     /// @inheritdoc IERC1967Upgradeable
+    /// @dev On a fresh proxy `data_` is an ABI-encoded `InitialConfig`. When upgrading an already initialized proxy,
+    ///      `data_` is `abi.encode(uint256 calldataGasPerByte, IL1FeeOracle l1FeeOracle)` for the fields added since.
     function onImplUpgrade(bytes calldata data_) public virtual override onlyProxied returns (bool /* success_ */) {
-        require(!_initialized);
+        if (_initialized) {
+            // Only reachable through `upgradeImpl()`, which calls back into the proxy.
+            if (msg.sender != address(this)) {
+                revert NotAuthorized();
+            }
+
+            (_calldataGasPerByte, _l1FeeOracle) = abi.decode(data_, (uint256, IL1FeeOracle));
+
+            return true;
+        }
 
         _initialized = true;
 
