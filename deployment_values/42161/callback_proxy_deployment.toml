@@ -1,0 +1,15 @@
+[42161]
+endpoint_url = "${ARBITRUM_MAINNET_RPC}"
+
+[42161.uint]
+salt = 0
+max_charge_gas = 50000
+extra_gas = 80000
+gas_price_coeff_per_1000 = 1100
+calldata_gas_per_byte = 16
+
+[42161.address]
+callback_sender_1 = "0x9d9aB130C495B623D15F724b3541BAf27C6bC35b"
+callback_sender_2 = "0x0000000000000000000000000000000000000000"
+callback_sender_3 = "0x0000000000000000000000000000000000000000"
+l1_fee_oracle = "0x0000000000000000000000000000000000000000"
